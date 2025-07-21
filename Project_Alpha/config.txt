@@ -14,7 +14,7 @@ PORT=12346
 MODE_NUM=1
 
 # Unity launch mode:
-# 0 = Launch Unity automatically from GameStart.exe
+# 0 = Launch Unity automatically from AAgp_test30.exe
 # 1 = Launch Unity manually (useful for debugging)
 DEBUG_MODE=0
 
