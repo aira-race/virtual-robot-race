@@ -80,6 +80,8 @@ Make sure the filename is exactly `model.pth`.
 
 ```
 project/
+├── setup_env.bat 
+├── requirements.txt 
 ├── main.py
 ├── websocket_server.py
 ├── config.py
@@ -90,19 +92,25 @@ project/
 ├── data_interactive/
 ├── rule_based_input.py
 ├── rule_based_algorithms/
-│   ├── perception_Startsignal.py
+│   ├── debug_utils.py
+│   ├── driver_model.py
 │   ├── Linetrace_white.py
+│   ├── perception_Lane.py
+│   ├── perception_Startsignal.py
+│   ├── perception_trackposition.py
+│   ├── sliding_windows.py
 │   └── status_Robot.py
 ├── inference_input.py
 ├── models/
 │   └── model.pth   <download from Google Drive>
+├── make_video.py
 ├── data_manager.py
 ├── Windows/
-│   ├── AAgp_test30.exe
+│   ├── AAgp_test32.exe
 │   ├── runtime_log.txt
 │   ├── UnityCrashHandler64.exe
 │   ├── UnityPlayer.dll
-│   ├── AAgp_test30_Data/
+│   ├── AAgp_test32_Data/
 │   └── MonoBleedingEdge/
 └── training_data/
     └── run_YYYYMMDD_HHMMSS/
