@@ -30,7 +30,7 @@ NAME=AndyC
 RACE_FLAG=0
 
 # --- post race video options ---
-AUTO_MAKE_VIDEO=0        # 1=auto make mp4, 0=off
+AUTO_MAKE_VIDEO=0          # 1=auto make mp4, 0=off
 OPEN_EXPLORER_ON_VIDEO=1   # 1=open Explorer on finish (Windows)
 VIDEO_FPS=20               # default FPS for MP4
 INFER_FPS=1                # 1=estimate FPS from timestamps

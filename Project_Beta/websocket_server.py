@@ -85,40 +85,52 @@ def write_latest_torque(left: float, right: float) -> None:
         print(f"[Server] Failed to write torque to file: {e}")
 
 
+
 # ---- Loops -----------------------------------------------------------------
 
 async def send_torque_data(websocket: websockets.WebSocketServerProtocol) -> None:
-    """Send torque command to Unity every 50 ms (20 Hz)."""
-    print("[Server] Starting torque data sender...")
+    """Send control command to Unity every 50 ms (20 Hz)."""
+    print("[Server] Starting control-data sender...")
     try:
         while not shutdown_event.is_set():
             await asyncio.sleep(0.05)
-            msg = {
-                "type": "control",
-                "leftTorque": control_module.leftTorque,
-                "rightTorque": control_module.rightTorque,
-            }
+
+            msg = None
+            if hasattr(control_module, "get_latest_command"):
+                try:
+                    msg = control_module.get_latest_command()
+                    # 必須の保険
+                    msg.setdefault("type", "control")
+                    msg.setdefault("robot_id", "R1")
+                except Exception as e:
+                    print(f"[Server] get_latest_command() failed: {e}")
+
+            if msg is None:
+                # 後方互換（存在するなら）：左右→drive、steer=0
+                lt = float(getattr(control_module, "leftTorque", 0.0))
+                rt = float(getattr(control_module, "rightTorque", 0.0))
+                msg = {
+                    "type": "control",
+                    "robot_id": "R1",
+                    "driveTorque": 0.5 * (lt + rt),
+                    "steerAngle": 0.0,
+                }
+
             try:
-                write_latest_torque(control_module.leftTorque, control_module.rightTorque)
                 await websocket.send(json.dumps(msg))
+                # ログが多ければコメントアウト：
+                # print(f"[Server] Sent control: {msg}")
             except websockets.exceptions.ConnectionClosed:
-                print("[Server] WebSocket closed. Stopping torque sender.")
+                print("[Server] WebSocket closed. Stopping sender.")
                 break
     except asyncio.CancelledError:
-        # expected on shutdown
         pass
     finally:
-        print("[Server] Torque sender loop exited.")
+        print("[Server] Control-data sender exited.")
 
 
 async def receive_stream(websocket: websockets.WebSocketServerProtocol) -> None:
-    """Receive binary images and JSON metadata from Unity.
-
-    Contract:
-      - Binary messages are JPG bytes (optional per tick).
-      - JSON 'type':'data' follows and carries the filename and per-tick meta.
-      - Final race summary JSON (DataLogger output) comes at race end (no images).
-    """
+    """Receive binary images and JSON metadata from Unity."""
     global _dm, _images_dir
     print("[Server] Ready to receive data from Unity...")
 
@@ -127,9 +139,7 @@ async def receive_stream(websocket: websockets.WebSocketServerProtocol) -> None:
 
     try:
         async for message in websocket:
-            # Binary = image
             if isinstance(message, (bytes, bytearray)):
-                # Keep only the latest image (no backlog).
                 last_image_buf = bytes(message)
                 continue
 
@@ -140,19 +150,15 @@ async def receive_stream(websocket: websockets.WebSocketServerProtocol) -> None:
                 print(f"[Server] Ignoring non-JSON text: {e}")
                 continue
 
-            mtype = data.get("type")
+            mtype = data.get("type", "")
 
-            # Per-tick meta
             if mtype == "data":
                 tick = data.get("tick")
                 utc_ms = data.get("utc_ms")
                 filename = data.get("filename") or (f"frame_{int(tick):06d}.jpg" if tick is not None else "no_image")
-                soc = data.get("soc", 0.0)
-                status = data.get("status", "unknown")
-                left_tq = data.get("leftTorque", 0.0)
-                right_tq = data.get("rightTorque", 0.0)
+                # 任意でdrive/steerを拾いたければここで取り出す
+                # drive = data.get("driveTorque"); steer = data.get("steerAngle")
 
-                # If we have a pending image, save it now with the provided filename.
                 if last_image_buf is not None and filename != "no_image":
                     try:
                         _dm.save_image_bytes(_images_dir / filename, last_image_buf)
@@ -164,45 +170,33 @@ async def receive_stream(websocket: websockets.WebSocketServerProtocol) -> None:
                     except Exception as e:
                         print(f"[Server] Failed to save image {filename}: {e}")
 
-                
-
-            # Final race data (summary from Unity DataLogger)
-            elif mtype in ("race_data", "RaceData", None):
+            elif mtype in ("race_data", "RaceData"):
                 try:
-                    print("[Server] Received race metadata.")                    
+                    print("[Server] Received race metadata.")
                     payload = data.get("payload", data)
                     if isinstance(payload, str):
                         try:
                             payload = json.loads(payload)
                         except Exception:
                             pass
-
                     _dm.save_metadata_csv_from_unity_json(payload)
-
-                    
                 except Exception as e:
                     print(f"[Server] Failed to save final race metadata: {e}")
-                break
+                break  # ← 本当にレース終了の時だけ抜ける
 
-            # Connection/control messages
-            elif mtype == "connection":
-                if data.get("message") == "RaceEnd":
-                    
-                    pass
-                # Handshake or other connection messages are handled in handler()
+            elif mtype == "connection" and data.get("message") == "RaceEnd":
+                break  # 明示終了
 
             else:
-                # Unknown message type; ignore or log
+                # type 未指定/未知 → 無視して継続
                 pass
 
     except websockets.exceptions.ConnectionClosed:
         print("[Server] Client disconnected.")
     except asyncio.CancelledError:
-        # expected on shutdown
         pass
     finally:
         print("[Server] Image/SOC reception stopped.")
-
 
 # ---- Connection handler ----------------------------------------------------
 
@@ -212,21 +206,25 @@ async def handler(websocket: websockets.WebSocketServerProtocol, stop_event: Eve
 
     connected_websocket = websocket
     frame_received_event.clear()
-
     print("[Server] Client connected.")
 
-    # Start a new run directory (images/, frames_map.csv, etc.)
+    # ★ keyboard listener（あれば起動）
+    try:
+        if hasattr(control_module, "start_listener"):
+            control_module.start_listener()
+    except Exception as e:
+        print(f"[Server] Keyboard listener start failed: {e}")
+
+    # Start a new run directory
     try:
         base_dir = Path(__file__).parent
         _dm = DataManager(base_dir=base_dir)
         _run_dir, _images_dir = _dm.start_new_run()
     except Exception as e:
         print(f"[Server] DataManager init failed: {e}")
-        _dm = None
-        _run_dir = None
-        _images_dir = None
+        _dm = None; _run_dir = None; _images_dir = None
 
-    # Handshake
+    # Handshake（既存のまま）
     try:
         handshake = {
             "type": "connection",
@@ -247,18 +245,22 @@ async def handler(websocket: websockets.WebSocketServerProtocol, stop_event: Eve
     recv_task = _track(asyncio.create_task(receive_stream(websocket)))
 
     try:
-        # Wait until the receive loop finishes (client closed or race end)
         await recv_task
     finally:
         print("[Server] Connection closed (handler cleanup).")
 
-        # Cancel both loops (if still running)
         for t in (send_task, recv_task):
             if not t.done():
                 t.cancel()
         await asyncio.gather(send_task, recv_task, return_exceptions=True)
 
-        # Signal shutdown to main
+        # ★ keyboard listener停止
+        try:
+            if hasattr(control_module, "stop_listener"):
+                control_module.stop_listener()
+        except Exception as e:
+            print(f"[Server] Keyboard listener stop failed: {e}")
+
         shutdown_event.set()
         stop_event.set()
         connected_websocket = None
@@ -330,18 +332,21 @@ async def send_race_end_signal() -> None:
         print("[Server] No client connected to send RaceEnd.")
 
 
-async def send_control_command_async(left: float, right: float) -> None:
-    """Send a manual torque command (used in 'table' mode tools)."""
+# 置換：send_control_command_async()
+async def send_control_command_async(drive: float, steer: float, robot_id: str = "R1") -> None:
+    """Send a manual drive+steer command (used by 'table' etc.)."""
     if connected_websocket:
         try:
             message = json.dumps({
                 "type": "control",
-                "leftTorque": left,
-                "rightTorque": right,
+                "robot_id": robot_id,
+                "driveTorque": float(drive),
+                "steerAngle": float(steer),
             })
             await connected_websocket.send(message)
-            print(f"[Server] Sent manual torque: L={left}, R={right}")
+            print(f"[Server] Sent manual control → id={robot_id}, drive={drive:.3f}, steer={steer:.3f}")
         except Exception as e:
-            print(f"[Server] Error sending torque: {e}")
+            print(f"[Server] Error sending control: {e}")
     else:
         print("[Server] No connected client.")
+

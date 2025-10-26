@@ -143,10 +143,15 @@ async def main() -> None:
 
         if mode == "keyboard":
             import keyboard_input
-            input_thread = threading.Thread(
-                target=keyboard_input.listen_for_input, args=(stop_event,), daemon=True
-            )
-            input_thread.start()
+            # 旧: 別スレッドで listen_for_input(stop_event) を起動
+            # input_thread = threading.Thread(
+            #     target=keyboard_input.listen_for_input, args=(stop_event,), daemon=True
+            # )
+            # input_thread.start()
+
+            # 新: バックグラウンドリスナを起動（冪等・多重起動しない）
+            keyboard_input.start_listener()
+
 
         elif mode == "ai":
             import inference_input
@@ -209,9 +214,20 @@ async def main() -> None:
         except asyncio.CancelledError:
             pass
 
+           
     # 5-3) Stop keyboard/ai/rule_based thread (if any)
     if input_thread:
         input_thread.join(timeout=2.0)
+
+    # ★ 追加：keyboardモードのときは明示停止（冪等）
+    try:
+        if getattr(config, "MODE", "keyboard") == "keyboard":
+            import keyboard_input
+            if hasattr(keyboard_input, "stop_listener"):
+                keyboard_input.stop_listener()
+    except Exception as e:
+        print(f"[Main] keyboard_input.stop_listener() failed: {e}")
+
 
     # 5-4) Shutdown WebSocket server gracefully
     await websocket_server.shutdown_server()
