@@ -1,63 +1,79 @@
 # main.py
+# 新アーキテクチャ版（Unity=Server、Python=Client）
 # Entry point that orchestrates:
-#  - WebSocket server (Unity <-> Python)
+#  - Unity process launch (WebSocket Server)
+#  - RobotWebSocketClient (Python Client)
 #  - Input pipeline (keyboard / table / rule_based / AI)
-#  - Optional Unity process launch
-#  - Post-race video build (MP4) and opening Explorer for easy drag & drop
+#  - Post-race video build (MP4)
 
 import asyncio
 import threading
 import subprocess
 import os
-import sys  # ← needed for platform checks when opening Explorer
+import sys
+import time
 from typing import Optional
 
 import config
-import websocket_server
+from websocket_client import RobotWebSocketClient
 
-# Lazy-import only when used to avoid unnecessary hard deps at import time
-#   - keyboard_input / inference_input / table_input will be imported inside main()
-
+# Lazy-import only when used
 import make_video
-from data_manager import read_last_run_dir  # returns Path to last run directory (created by DataManager)
+from data_manager import read_last_run_dir
 
-# Shared stop signal for threads / tasks
+# Shared stop signal
 stop_event = threading.Event()
 
+# Global client instance
+robot_client: Optional[RobotWebSocketClient] = None
 
-def launch_unity_exe() -> None:
-    """Launch the built Unity executable if it exists (used when DEBUG_MODE=0)."""
+
+def launch_unity_exe() -> Optional[subprocess.Popen]:
+    """Launch the built Unity executable if it exists."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     exe_path = os.path.join(base_dir, "Windows", "VirtualRobotRace_Beta.exe")
 
     if os.path.exists(exe_path):
-        print(f"[Main] Launching Unity app: {exe_path}")
-        # Use shell=False to avoid problems with spaces in the path.
-        subprocess.Popen([exe_path], shell=False)
+        print(f"[Main] Launching Unity server: {exe_path}")
+        proc = subprocess.Popen([exe_path], shell=False)
+        print(f"[Main] Unity server launched (PID: {proc.pid})")
+        return proc
     else:
         print(f"[Main] Unity .exe not found at: {exe_path}")
+        return None
 
 
-async def _drain_all_tasks() -> None:
-    """Cancel & await remaining asyncio tasks to avoid 'destroyed but pending' warnings (Windows)."""
-    pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    for t in pending:
-        t.cancel()
-    if pending:
-        await asyncio.gather(*pending, return_exceptions=True)
+async def wait_for_unity_server(server_url: str, timeout: float = 30.0) -> bool:
+    """
+    Wait for Unity WebSocket server to be ready.
+    Attempts to connect with exponential backoff.
+    """
+    import websockets
+
+    print(f"[Main] Waiting for Unity server at {server_url}...")
+    start_time = time.time()
+    delay = 0.5  # Initial delay
+
+    while time.time() - start_time < timeout:
+        try:
+            async with websockets.connect(server_url) as ws:
+                await ws.close()
+                print(f"[Main] Unity server is ready!")
+                return True
+        except Exception:
+            await asyncio.sleep(delay)
+            delay = min(delay * 1.5, 2.0)  # Exponential backoff, max 2s
+
+    print(f"[Main] Unity server did not start within {timeout}s")
+    return False
 
 
 async def build_video_and_open_explorer() -> None:
-    """
-    Post-race pipeline:
-      - Build MP4 from the latest run's images via make_video.py
-      - Open Explorer selecting the MP4 so the user can drag & drop to X easily
-    """
+    """Post-race pipeline: Build MP4 from the latest run's images."""
     if not getattr(config, "AUTO_MAKE_VIDEO", True):
         print("[Main] AUTO_MAKE_VIDEO=0 → Skip video pipeline.")
         return
 
-    # Ask data_manager where the latest run directory is
     run_dir = read_last_run_dir()
     if not run_dir:
         print("[Main] Post-race video pipeline skipped: last_run_dir not found.")
@@ -74,7 +90,6 @@ async def build_video_and_open_explorer() -> None:
 
     print(f"[Main] Building MP4 → {out_path} (fps={fps}, infer_fps={infer})")
 
-    # Run the CPU-bound encoding in a thread pool to keep the event loop responsive
     loop = asyncio.get_running_loop()
 
     def _encode():
@@ -82,21 +97,18 @@ async def build_video_and_open_explorer() -> None:
 
     await loop.run_in_executor(None, _encode)
 
-    # Open Explorer selecting the MP4 (Windows); fallback to open folder on macOS/Linux
     if getattr(config, "OPEN_EXPLORER_ON_VIDEO", True):
         try:
             if sys.platform.startswith("win") and out_path.exists():
-                # '/select,' shows the file selected in its folder
                 subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
                 print("[Main] Explorer opened with the MP4 selected.")
             else:
-                # Simple folder open for non-Windows platforms
                 opener = "open" if sys.platform == "darwin" else "xdg-open"
                 subprocess.Popen([opener, str(run_dir)])
                 print("[Main] Opened run directory in file manager.")
         except Exception as e:
             print(f"[Main] Failed to open file manager: {e}")
-    
+
     if getattr(config, "JPEG_SAVE", 1) == 0:
         try:
             if images_dir.exists():
@@ -112,150 +124,180 @@ async def build_video_and_open_explorer() -> None:
             print(f"[Main] Cleanup after video failed: {e}")
 
 
+async def run_control_module(client: RobotWebSocketClient, mode: str):
+    """
+    Run the control module based on config.MODE.
+    This integrates keyboard/ai/rule_based control with the WebSocket client.
+    """
+    print(f"[Main] Starting control module: {mode}")
+
+    if mode == "keyboard":
+        import keyboard_input
+        keyboard_input.start_listener()
+
+        # Poll keyboard input and send to Unity
+        while not stop_event.is_set():
+            try:
+                cmd = keyboard_input.get_latest_command()
+                drive = cmd.get("driveTorque", 0.0)
+                steer = cmd.get("steerAngle", 0.0)
+
+                # Send control command to Unity
+                control_msg = {
+                    "type": "control",
+                    "robot_id": client.robot_id,
+                    "driveTorque": drive,
+                    "steerAngle": steer
+                }
+                await client.send_json(control_msg)
+
+            except Exception as e:
+                print(f"[Main] Keyboard control error: {e}")
+
+            await asyncio.sleep(0.05)  # 20Hz
+
+        keyboard_input.stop_listener()
+
+    elif mode == "ai":
+        import inference_input
+        # TODO: AI制御の実装
+        print("[Main] AI mode not yet implemented in new architecture")
+        await asyncio.sleep(1)
+
+    elif mode == "rule_based":
+        import rule_based_input
+        # TODO: rule_based制御の実装
+        print("[Main] Rule-based mode not yet implemented in new architecture")
+        await asyncio.sleep(1)
+
+    elif mode == "table":
+        import table_input
+        # TODO: table制御の実装
+        print("[Main] Table mode not yet implemented in new architecture")
+        await asyncio.sleep(1)
+
+    else:
+        print(f"[Main] Unknown MODE: {mode}")
+
+
 async def main() -> None:
     """
-    Orchestrates the whole lifecycle:
-      1) Start WebSocket server
-      2) Optionally launch Unity
-      3) Start input pipeline (keyboard / ai / rule_based / table)
-      4) Wait for stop_event (set by server or user)
-      5) Graceful shutdown
-      6) Post-race: build MP4 and open Explorer selecting the file
+    Main orchestration:
+      1) Launch Unity (WebSocketServer)
+      2) Wait for Unity to be ready
+      3) Connect RobotWebSocketClient
+      4) Start control module
+      5) Wait for stop_event
+      6) Graceful shutdown
+      7) Build video
     """
-    print("[Main] Starting system...")
-    race_end_sent = False
+    global robot_client
 
-    # 1) Start WebSocket server (awaits stop_event internally)
-    server_task = asyncio.create_task(websocket_server.start_server(stop_event))
+    print("[Main] Starting new architecture (Unity=Server, Python=Client)...")
 
-    # 2) Launch Unity unless DEBUG
-    if getattr(config, "DEBUG_MODE", 1) == 0:
-        launch_unity_exe()
-    else:
-        print("[Main] DEBUG_MODE = 1 → Please launch Unity manually.")
-
-    # 3) Input pipelines (one of them depending on config.MODE)
-    input_thread = None        # for keyboard / ai / rule_based (thread-based)
-    input_task = None          # for table mode (async task)
+    unity_proc = None
 
     try:
-        mode = getattr(config, "MODE", "keyboard")
-
-        if mode == "keyboard":
-            import keyboard_input
-            # 旧: 別スレッドで listen_for_input(stop_event) を起動
-            # input_thread = threading.Thread(
-            #     target=keyboard_input.listen_for_input, args=(stop_event,), daemon=True
-            # )
-            # input_thread.start()
-
-            # 新: バックグラウンドリスナを起動（冪等・多重起動しない）
-            keyboard_input.start_listener()
-
-
-        elif mode == "ai":
-            import inference_input
-            # Wait until first frame is saved before starting the AI loop
-            await asyncio.to_thread(websocket_server.frame_received_event.wait)
-            input_thread = threading.Thread(
-                target=inference_input.run_ai_loop, args=(stop_event,), daemon=True
-            )
-            input_thread.start()
-
-        elif mode == "rule_based":
-            import rule_based_input
-            await asyncio.to_thread(websocket_server.frame_received_event.wait)
-            input_thread = threading.Thread(
-                target=rule_based_input.run_rule_based_loop, args=(stop_event,), daemon=True
-            )
-            input_thread.start()
-
-        elif mode == "table":
-            import table_input
-            await asyncio.to_thread(websocket_server.frame_received_event.wait)
-            table_input.start_csv_replay()
-            input_task = asyncio.create_task(table_input.run_table_input_loop(stop_event))
-
+        # 1) Launch Unity
+        if getattr(config, "DEBUG_MODE", 1) == 0:
+            unity_proc = launch_unity_exe()
+            if not unity_proc:
+                print("[Main] Failed to launch Unity. Exiting.")
+                return
         else:
-            print(f"[Main] Unknown MODE: {mode}")
+            print("[Main] DEBUG_MODE = 1 → Please launch Unity manually.")
 
-        # 4) Main loop: wait for stop_event, allow optional hotkey 'q' to force race end
-        try:
-            import keyboard  # may fail in some environments; handle gracefully
-        except Exception:
-            keyboard = None
+        # 2) Wait for Unity server to be ready
+        server_url = f"ws://{config.HOST}:{config.PORT}/robot"
+        if not await wait_for_unity_server(server_url, timeout=30.0):
+            print("[Main] Unity server did not start. Exiting.")
+            return
 
-        while not stop_event.is_set():
+        # 3) Create and connect client
+        robot_client = RobotWebSocketClient(
+            robot_id="R1",
+            server_url=server_url
+        )
+
+        await robot_client.connect()
+
+        # 4) Start control module and receive loop concurrently
+        control_task = asyncio.create_task(
+            run_control_module(robot_client, config.MODE)
+        )
+        receive_task = asyncio.create_task(
+            robot_client.receive_loop()
+        )
+
+        # 5) Wait for stop_event or tasks to complete
+        while not stop_event.is_set() and robot_client.running:
             await asyncio.sleep(0.1)
 
-            # Optional hotkey: press 'q' to force RaceEnd to Unity
-            if keyboard is not None:
-                try:
-                    if keyboard.is_pressed("q") and not race_end_sent:
-                        print("[Main] 'q' pressed → Forcing race end.")
-                        await websocket_server.send_race_end_signal()
-                        race_end_sent = True
-                except Exception:
-                    # Ignore keyboard module limitations on some systems
-                    pass
+            # Optional: hotkey 'q' to force stop
+            try:
+                import keyboard
+                if keyboard.is_pressed("q"):
+                    print("[Main] 'q' pressed → Stopping...")
+                    stop_event.set()
+                    break
+            except Exception:
+                pass
+
+        # 6) Cleanup
+        print("[Main] Shutting down...")
+        stop_event.set()
+
+        # Cancel tasks
+        control_task.cancel()
+        receive_task.cancel()
+
+        try:
+            await asyncio.gather(control_task, receive_task, return_exceptions=True)
+        except Exception:
+            pass
+
+        # Close client
+        if robot_client:
+            await robot_client.close()
+
+        # 7) Post-race: build video
+        try:
+            await build_video_and_open_explorer()
+        except Exception as e:
+            print(f"[Main] Post-race video pipeline failed: {e}")
+
+        print("[Main] System fully stopped.")
 
     except KeyboardInterrupt:
         print("[Main] KeyboardInterrupt received. Exiting...")
         stop_event.set()
 
-    # 5) Cleanup sequence
-    stop_event.set()  # 5-1) signal all producers to stop
-
-    # 5-2) Stop table async task (if any)
-    if input_task:
-        input_task.cancel()
-        try:
-            await input_task
-        except asyncio.CancelledError:
-            pass
-
-           
-    # 5-3) Stop keyboard/ai/rule_based thread (if any)
-    if input_thread:
-        input_thread.join(timeout=2.0)
-
-    # ★ 追加：keyboardモードのときは明示停止（冪等）
-    try:
-        if getattr(config, "MODE", "keyboard") == "keyboard":
-            import keyboard_input
-            if hasattr(keyboard_input, "stop_listener"):
-                keyboard_input.stop_listener()
-    except Exception as e:
-        print(f"[Main] keyboard_input.stop_listener() failed: {e}")
+    finally:
+        # Terminate Unity process if we started it
+        if unity_proc and unity_proc.poll() is None:
+            print("[Main] Terminating Unity process...")
+            unity_proc.terminate()
+            try:
+                unity_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                unity_proc.kill()
 
 
-    # 5-4) Shutdown WebSocket server gracefully
-    await websocket_server.shutdown_server()
-
-    # 5-5) Wait for start_server() task to finish
-    if not server_task.done():
-        try:
-            await server_task
-        except asyncio.CancelledError:
-            print("[Main] Server task cancelled.")
-
-    # 6) Post-race: build video and open Explorer (centralized here)
-    try:
-        await build_video_and_open_explorer()
-    except Exception as e:
-        print(f"[Main] Post-race video pipeline failed: {e}")
-
-    print("[Main] System fully stopped.")
+async def _drain_all_tasks() -> None:
+    """Cancel & await remaining asyncio tasks."""
+    pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    for t in pending:
+        t.cancel()
+    if pending:
+        await asyncio.gather(*pending, return_exceptions=True)
 
 
 if __name__ == "__main__":
-    # Dedicated event loop to avoid interference with other tools
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
         loop.run_until_complete(main())
     finally:
-        # Ensure no pending tasks remain (prevents warnings on Windows)
         loop.run_until_complete(_drain_all_tasks())
         loop.run_until_complete(asyncio.sleep(0.05))
         loop.close()
