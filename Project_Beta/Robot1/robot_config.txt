@@ -11,13 +11,13 @@ ROBOT_ID=R1
 NAME=Player0001
 
 # レース参加フラグ (1: 参加してPOST, 0: 観戦のみ)
-RACE_FLAG=1
+RACE_FLAG=0
 
 # 画像保存 (1: 保存する, 0: 保存しない)
 JPEG_SAVE=1
 
 # ビデオ自動生成 (1: 有効, 0: 無効)
-AUTO_MAKE_VIDEO=1
+AUTO_MAKE_VIDEO=0
 
 # ビデオFPS
 VIDEO_FPS=20

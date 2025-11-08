@@ -1,10 +1,14 @@
-# keyboard_input.py
+# keyboard_input.py (Robot1 version)
 # Allows manual control of drive torque and steering angle using keyboard keys
 
 import threading
 import keyboard
 import time
 import sys
+
+# Module identification
+MODULE_SOURCE = "Robot1"
+print(f"[keyboard_input] Loaded from {MODULE_SOURCE}/")
 
 # Windows only: clear keyboard input buffer to avoid stuck input
 def clear_input_buffer():

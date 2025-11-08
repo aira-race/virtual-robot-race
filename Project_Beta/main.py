@@ -5,6 +5,7 @@
 #  - RobotWebSocketClient (Python Client)
 #  - Input pipeline (keyboard / table / rule_based / AI)
 #  - Post-race video build (MP4)
+# Robot1対応版: Robot1/robot_config.txt から設定を読み込み、Robot1/ 配下のモジュールを使用
 
 import asyncio
 import threading
@@ -13,6 +14,7 @@ import os
 import sys
 import time
 from typing import Optional
+from pathlib import Path
 
 import config
 from websocket_client import RobotWebSocketClient
@@ -68,9 +70,9 @@ async def wait_for_unity_server(server_url: str, timeout: float = 30.0) -> bool:
     return False
 
 
-async def build_video_and_open_explorer() -> None:
+async def build_video_and_open_explorer(robot_config: dict) -> None:
     """Post-race pipeline: Build MP4 from the latest run's images."""
-    if not getattr(config, "AUTO_MAKE_VIDEO", True):
+    if not robot_config.get("AUTO_MAKE_VIDEO", 1):
         print("[Main] AUTO_MAKE_VIDEO=0 → Skip video pipeline.")
         return
 
@@ -85,8 +87,8 @@ async def build_video_and_open_explorer() -> None:
         return
 
     out_path = run_dir / "output_video.mp4"
-    fps = getattr(config, "VIDEO_FPS", 20)
-    infer = getattr(config, "INFER_FPS", False)
+    fps = robot_config.get("VIDEO_FPS", 20)
+    infer = robot_config.get("INFER_FPS", 1)
 
     print(f"[Main] Building MP4 → {out_path} (fps={fps}, infer_fps={infer})")
 
@@ -97,19 +99,20 @@ async def build_video_and_open_explorer() -> None:
 
     await loop.run_in_executor(None, _encode)
 
-    if getattr(config, "OPEN_EXPLORER_ON_VIDEO", True):
-        try:
-            if sys.platform.startswith("win") and out_path.exists():
-                subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
-                print("[Main] Explorer opened with the MP4 selected.")
-            else:
-                opener = "open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.Popen([opener, str(run_dir)])
-                print("[Main] Opened run directory in file manager.")
-        except Exception as e:
-            print(f"[Main] Failed to open file manager: {e}")
+    # Note: OPEN_EXPLORER_ON_VIDEO was removed from robot_config
+    # Always try to open for now (Windows-specific behavior)
+    try:
+        if sys.platform.startswith("win") and out_path.exists():
+            subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
+            print("[Main] Explorer opened with the MP4 selected.")
+        else:
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.Popen([opener, str(run_dir)])
+            print("[Main] Opened run directory in file manager.")
+    except Exception as e:
+        print(f"[Main] Failed to open file manager: {e}")
 
-    if getattr(config, "JPEG_SAVE", 1) == 0:
+    if robot_config.get("JPEG_SAVE", 1) == 0:
         try:
             if images_dir.exists():
                 count = 0
@@ -124,82 +127,139 @@ async def build_video_and_open_explorer() -> None:
             print(f"[Main] Cleanup after video failed: {e}")
 
 
-async def run_control_module(client: RobotWebSocketClient, mode: str):
+async def run_control_module(client: RobotWebSocketClient, mode: str, robot_num: int):
     """
-    Run the control module based on config.MODE.
+    Run the control module based on mode string.
     This integrates keyboard/ai/rule_based control with the WebSocket client.
+    Imports from Robot{N}/ directory.
     """
-    print(f"[Main] Starting control module: {mode}")
+    print(f"[Main] Starting control module: {mode} (Robot{robot_num})")
 
-    if mode == "keyboard":
-        import keyboard_input
-        keyboard_input.start_listener()
+    # Import from Robot{N}/ directory using importlib for explicit module loading
+    import importlib.util
+    robot_dir = Path(f"Robot{robot_num}")
 
-        # Poll keyboard input and send to Unity
-        while not stop_event.is_set():
-            try:
-                cmd = keyboard_input.get_latest_command()
-                drive = cmd.get("driveTorque", 0.0)
-                steer = cmd.get("steerAngle", 0.0)
+    try:
+        if mode == "keyboard":
+            # Load keyboard_input from Robot{N}/ directory explicitly
+            module_file = robot_dir / "keyboard_input.py"
+            spec = importlib.util.spec_from_file_location(
+                f"Robot{robot_num}.keyboard_input",
+                module_file
+            )
+            keyboard_input = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(keyboard_input)
 
-                # Send control command to Unity
-                control_msg = {
-                    "type": "control",
-                    "robot_id": client.robot_id,
-                    "driveTorque": drive,
-                    "steerAngle": steer
-                }
-                await client.send_json(control_msg)
+            keyboard_input.start_listener()
 
-            except Exception as e:
-                print(f"[Main] Keyboard control error: {e}")
+            # Poll keyboard input and send to Unity
+            while not stop_event.is_set():
+                try:
+                    cmd = keyboard_input.get_latest_command()
+                    drive = cmd.get("driveTorque", 0.0)
+                    steer = cmd.get("steerAngle", 0.0)
 
-            await asyncio.sleep(0.05)  # 20Hz
+                    # Send control command to Unity
+                    control_msg = {
+                        "type": "control",
+                        "robot_id": client.robot_id,
+                        "driveTorque": drive,
+                        "steerAngle": steer
+                    }
+                    await client.send_json(control_msg)
 
-        keyboard_input.stop_listener()
+                except Exception as e:
+                    print(f"[Main] Keyboard control error: {e}")
 
-    elif mode == "ai":
-        import inference_input
-        # TODO: AI制御の実装
-        print("[Main] AI mode not yet implemented in new architecture")
-        await asyncio.sleep(1)
+                await asyncio.sleep(0.05)  # 20Hz
 
-    elif mode == "rule_based":
-        import rule_based_input
-        # TODO: rule_based制御の実装
-        print("[Main] Rule-based mode not yet implemented in new architecture")
-        await asyncio.sleep(1)
+            keyboard_input.stop_listener()
 
-    elif mode == "table":
-        import table_input
-        # TODO: table制御の実装
-        print("[Main] Table mode not yet implemented in new architecture")
-        await asyncio.sleep(1)
+        elif mode == "ai":
+            # Load inference_input from Robot{N}/ directory explicitly
+            module_file = robot_dir / "inference_input.py"
+            spec = importlib.util.spec_from_file_location(
+                f"Robot{robot_num}.inference_input",
+                module_file
+            )
+            inference_input = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(inference_input)
 
-    else:
-        print(f"[Main] Unknown MODE: {mode}")
+            # TODO: AI制御の実装
+            print("[Main] AI mode not yet implemented in new architecture")
+            await asyncio.sleep(1)
+
+        elif mode == "rule_based":
+            # Load rule_based_input from Robot{N}/ directory explicitly
+            module_file = robot_dir / "rule_based_input.py"
+            spec = importlib.util.spec_from_file_location(
+                f"Robot{robot_num}.rule_based_input",
+                module_file
+            )
+            rule_based_input = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(rule_based_input)
+
+            # TODO: rule_based制御の実装
+            print("[Main] Rule-based mode not yet implemented in new architecture")
+            await asyncio.sleep(1)
+
+        elif mode == "table":
+            # Load table_input from Robot{N}/ directory explicitly
+            module_file = robot_dir / "table_input.py"
+            spec = importlib.util.spec_from_file_location(
+                f"Robot{robot_num}.table_input",
+                module_file
+            )
+            table_input = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(table_input)
+
+            # TODO: table制御の実装
+            print("[Main] Table mode not yet implemented in new architecture")
+            await asyncio.sleep(1)
+
+        else:
+            print(f"[Main] Unknown MODE: {mode}")
+
+    finally:
+        # Cleanup is handled automatically with importlib approach
+        pass
 
 
 async def main() -> None:
     """
-    Main orchestration:
-      1) Launch Unity (WebSocketServer)
-      2) Wait for Unity to be ready
-      3) Connect RobotWebSocketClient
-      4) Start control module
-      5) Wait for stop_event
-      6) Graceful shutdown
-      7) Build video
+    Main orchestration (Robot1対応版):
+      1) Load Robot1 config
+      2) Launch Unity (WebSocketServer)
+      3) Wait for Unity to be ready
+      4) Connect RobotWebSocketClient
+      5) Start control module (from Robot1/)
+      6) Wait for stop_event
+      7) Graceful shutdown
+      8) Build video
     """
     global robot_client
 
     print("[Main] Starting new architecture (Unity=Server, Python=Client)...")
+    print("[Main] Robot1対応版 - Robot1/robot_config.txt から設定を読み込みます")
+
+    # 1) Load Robot1 config
+    robot_num = 1  # Phase 1: Robot1のみ対応
+    robot_config = config.get_robot_config(robot_num)
+    robot_id = robot_config.get("ROBOT_ID", "R1")
+    mode_num = robot_config.get("MODE_NUM", 1)
+    mode = config.get_mode_string(mode_num)
+
+    print(f"[Main] Robot{robot_num} config loaded:")
+    print(f"  - ROBOT_ID: {robot_id}")
+    print(f"  - MODE: {mode} (MODE_NUM={mode_num})")
+    print(f"  - NAME: {robot_config.get('NAME', 'Player0000')}")
+    print(f"  - RACE_FLAG: {robot_config.get('RACE_FLAG', 1)}")
 
     unity_proc = None
 
     try:
-        # 1) Launch Unity
-        if getattr(config, "DEBUG_MODE", 1) == 0:
+        # 2) Launch Unity
+        if config.DEBUG_MODE == 0:
             unity_proc = launch_unity_exe()
             if not unity_proc:
                 print("[Main] Failed to launch Unity. Exiting.")
@@ -207,29 +267,29 @@ async def main() -> None:
         else:
             print("[Main] DEBUG_MODE = 1 → Please launch Unity manually.")
 
-        # 2) Wait for Unity server to be ready
+        # 3) Wait for Unity server to be ready
         server_url = f"ws://{config.HOST}:{config.PORT}/robot"
         if not await wait_for_unity_server(server_url, timeout=30.0):
             print("[Main] Unity server did not start. Exiting.")
             return
 
-        # 3) Create and connect client
+        # 4) Create and connect client
         robot_client = RobotWebSocketClient(
-            robot_id="R1",
+            robot_id=robot_id,
             server_url=server_url
         )
 
         await robot_client.connect()
 
-        # 4) Start control module and receive loop concurrently
+        # 5) Start control module and receive loop concurrently
         control_task = asyncio.create_task(
-            run_control_module(robot_client, config.MODE)
+            run_control_module(robot_client, mode, robot_num)
         )
         receive_task = asyncio.create_task(
             robot_client.receive_loop()
         )
 
-        # 5) Wait for stop_event or tasks to complete
+        # 6) Wait for stop_event or tasks to complete
         while not stop_event.is_set() and robot_client.running:
             await asyncio.sleep(0.1)
 
@@ -243,7 +303,7 @@ async def main() -> None:
             except Exception:
                 pass
 
-        # 6) Cleanup
+        # 7) Cleanup
         print("[Main] Shutting down...")
         stop_event.set()
 
@@ -260,9 +320,9 @@ async def main() -> None:
         if robot_client:
             await robot_client.close()
 
-        # 7) Post-race: build video
+        # 8) Post-race: build video
         try:
-            await build_video_and_open_explorer()
+            await build_video_and_open_explorer(robot_config)
         except Exception as e:
             print(f"[Main] Post-race video pipeline failed: {e}")
 

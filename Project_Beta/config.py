@@ -1,28 +1,30 @@
 # config.py
-# Reads and applies configuration values from config.txt
+# Reads and applies configuration values from config.txt and Robot{N}/robot_config.txt
 
 import os
 import re
+from pathlib import Path
 
 CONFIG_PATH = "config.txt"
 
-# Default values if config.txt is missing or invalid
+# Default values for global config (config.txt)
 DEFAULT_CONFIG = {
     "HOST": "localhost",
     "PORT": 12346,
     "ACTIVE_ROBOTS": "1",   # アクティブなロボット (カンマ区切り)
-    "MODE_NUM": 1,          # 1: keyboard, 2: table, 3: rule_based, 4: ai (旧互換性)
     "DEBUG_MODE": 0,        # 0: Launch Unity automatically, 1: Launch manually (debug)
-    "JPEG_SAVE": 0,         # 1: Save images, 0: Do not save
+}
+
+# Default values for robot-specific config (Robot{N}/robot_config.txt)
+DEFAULT_ROBOT_CONFIG = {
+    "MODE_NUM": 1,          # 1: keyboard, 2: table, 3: rule_based, 4: ai
+    "ROBOT_ID": "R1",       # Robot ID (e.g., R1, R2, ...)
     "NAME": "Player0000",   # Player name (up to 10 alphanumeric chars)
     "RACE_FLAG": 1,         # 1: participate (POST), 0: watch only
-
-    # --- post race video options ---
-    # Use 0/1 in config.txt; converted to bools in apply_config()
-    "AUTO_MAKE_VIDEO": 1,         # 1=auto make mp4 after run
-    "OPEN_EXPLORER_ON_VIDEO": 1,  # 1=open Explorer after mp4 made (Windows)
-    "VIDEO_FPS": 20,              # default video fps
-    "INFER_FPS": 1,               # 1=estimate fps from timestamps
+    "JPEG_SAVE": 1,         # 1: Save images, 0: Do not save
+    "AUTO_MAKE_VIDEO": 1,   # 1=auto make mp4 after run
+    "VIDEO_FPS": 20,        # default video fps
+    "INFER_FPS": 1,         # 1=estimate fps from timestamps
 }
 
 # Keys that should be parsed as integers
@@ -33,12 +35,15 @@ INT_KEYS = {
     "JPEG_SAVE",
     "RACE_FLAG",
     "AUTO_MAKE_VIDEO",
-    "OPEN_EXPLORER_ON_VIDEO",
     "VIDEO_FPS",
     "INFER_FPS",
 }
 
+# Global config storage
 CONFIG = DEFAULT_CONFIG.copy()
+
+# Robot configs storage (indexed by robot number: 1, 2, 3, 4, 5)
+ROBOT_CONFIGS = {}
 
 def _strip_inline_comment(value: str) -> str:
     """
@@ -57,14 +62,14 @@ def _strip_quotes(value: str) -> str:
         return value[1:-1]
     return value
 
-def load_config():
-    """Load key-value pairs from config.txt with inline-comment support."""
-    if not os.path.exists(CONFIG_PATH):
-        print("[Config] config.txt not found. Using default settings.")
+def _load_config_file(file_path: str, defaults: dict, target_dict: dict) -> None:
+    """Generic config file loader with inline-comment support."""
+    if not os.path.exists(file_path):
+        print(f"[Config] {file_path} not found. Using default settings.")
         return
 
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             for raw in f:
                 line = raw.strip()
                 if not line or line.startswith("#"):
@@ -79,18 +84,45 @@ def load_config():
                 value = _strip_inline_comment(value)
                 value = _strip_quotes(value)
 
-                if key in DEFAULT_CONFIG:
+                if key in defaults:
                     if key in INT_KEYS:
                         try:
-                            CONFIG[key] = int(value)
+                            target_dict[key] = int(value)
                         except Exception:
                             print(f"[Config] WARNING: Invalid integer for {key}='{value}'. Using default.")
-                            CONFIG[key] = DEFAULT_CONFIG[key]
+                            target_dict[key] = defaults[key]
                     else:
-                        CONFIG[key] = value
+                        target_dict[key] = value
                 # Unknown keys are ignored silently (forward compatibility)
     except Exception as e:
-        print(f"[Config] Failed to read config.txt: {e}")
+        print(f"[Config] Failed to read {file_path}: {e}")
+
+
+def load_config():
+    """Load key-value pairs from config.txt (global settings)."""
+    _load_config_file(CONFIG_PATH, DEFAULT_CONFIG, CONFIG)
+
+
+def load_robot_config(robot_num: int) -> dict:
+    """
+    Load robot-specific config from Robot{N}/robot_config.txt.
+    Returns a dict with robot-specific settings.
+    """
+    robot_config = DEFAULT_ROBOT_CONFIG.copy()
+    robot_dir = Path(f"Robot{robot_num}")
+    config_file = robot_dir / "robot_config.txt"
+
+    if config_file.exists():
+        _load_config_file(str(config_file), DEFAULT_ROBOT_CONFIG, robot_config)
+        print(f"[Config] Loaded config for Robot{robot_num} from {config_file}")
+    else:
+        print(f"[Config] Robot{robot_num} config not found at {config_file}. Using defaults.")
+
+    # Override ROBOT_ID based on robot number if not explicitly set
+    if robot_config.get("ROBOT_ID") == "R1":  # Default value
+        robot_config["ROBOT_ID"] = f"R{robot_num}"
+
+    return robot_config
 
 def validate_name(name: str) -> str:
     """
@@ -105,35 +137,38 @@ def validate_name(name: str) -> str:
     return DEFAULT_CONFIG["NAME"]
 
 def apply_config():
-    """Apply loaded values as module-level variables."""
-    global HOST, PORT, ACTIVE_ROBOTS, MODE_NUM, MODE, DEBUG_MODE, JPEG_SAVE, NAME, RACE_FLAG
-    global AUTO_MAKE_VIDEO, OPEN_EXPLORER_ON_VIDEO, VIDEO_FPS, INFER_FPS
+    """Apply loaded global config values as module-level variables."""
+    global HOST, PORT, ACTIVE_ROBOTS, DEBUG_MODE
 
     load_config()
 
     HOST = CONFIG["HOST"]
     PORT = CONFIG["PORT"]
+    DEBUG_MODE = CONFIG["DEBUG_MODE"]
 
     # アクティブロボットのリストを解析
     ACTIVE_ROBOTS = [int(r.strip()) for r in CONFIG.get("ACTIVE_ROBOTS", "1").split(",")]
 
-    MODE_NUM = CONFIG["MODE_NUM"]
+    # Load all robot configs
+    for robot_num in ACTIVE_ROBOTS:
+        ROBOT_CONFIGS[robot_num] = load_robot_config(robot_num)
 
+
+def get_robot_config(robot_num: int) -> dict:
+    """
+    Get config for a specific robot.
+    If not loaded yet, load it on demand.
+    """
+    if robot_num not in ROBOT_CONFIGS:
+        ROBOT_CONFIGS[robot_num] = load_robot_config(robot_num)
+    return ROBOT_CONFIGS[robot_num]
+
+
+def get_mode_string(mode_num: int) -> str:
+    """Convert MODE_NUM to mode string."""
     MODE_MAP = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai"}
-    MODE = MODE_MAP.get(MODE_NUM, "keyboard")
+    return MODE_MAP.get(mode_num, "keyboard")
 
-    DEBUG_MODE = CONFIG["DEBUG_MODE"]
-    JPEG_SAVE = CONFIG["JPEG_SAVE"]
 
-    NAME = validate_name(CONFIG.get("NAME", DEFAULT_CONFIG["NAME"]))
-    RACE_FLAG = CONFIG["RACE_FLAG"]
-
-    # --- video options ---
-    # Convert 0/1 ints to bools for convenience in code
-    AUTO_MAKE_VIDEO = bool(CONFIG.get("AUTO_MAKE_VIDEO", DEFAULT_CONFIG["AUTO_MAKE_VIDEO"]))
-    OPEN_EXPLORER_ON_VIDEO = bool(CONFIG.get("OPEN_EXPLORER_ON_VIDEO", DEFAULT_CONFIG["OPEN_EXPLORER_ON_VIDEO"]))
-    VIDEO_FPS = int(CONFIG.get("VIDEO_FPS", DEFAULT_CONFIG["VIDEO_FPS"]))
-    INFER_FPS = bool(CONFIG.get("INFER_FPS", DEFAULT_CONFIG["INFER_FPS"]))
-
-# Initialize settings at import time
+# Initialize global settings at import time
 apply_config()
