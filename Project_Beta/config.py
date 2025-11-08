@@ -10,7 +10,8 @@ CONFIG_PATH = "config.txt"
 DEFAULT_CONFIG = {
     "HOST": "localhost",
     "PORT": 12346,
-    "MODE_NUM": 1,          # 1: keyboard, 2: table, 3: rule_based, 4: ai
+    "ACTIVE_ROBOTS": "1",   # アクティブなロボット (カンマ区切り)
+    "MODE_NUM": 1,          # 1: keyboard, 2: table, 3: rule_based, 4: ai (旧互換性)
     "DEBUG_MODE": 0,        # 0: Launch Unity automatically, 1: Launch manually (debug)
     "JPEG_SAVE": 0,         # 1: Save images, 0: Do not save
     "NAME": "Player0000",   # Player name (up to 10 alphanumeric chars)
@@ -105,13 +106,17 @@ def validate_name(name: str) -> str:
 
 def apply_config():
     """Apply loaded values as module-level variables."""
-    global HOST, PORT, MODE_NUM, MODE, DEBUG_MODE, JPEG_SAVE, NAME, RACE_FLAG
+    global HOST, PORT, ACTIVE_ROBOTS, MODE_NUM, MODE, DEBUG_MODE, JPEG_SAVE, NAME, RACE_FLAG
     global AUTO_MAKE_VIDEO, OPEN_EXPLORER_ON_VIDEO, VIDEO_FPS, INFER_FPS
 
     load_config()
 
     HOST = CONFIG["HOST"]
     PORT = CONFIG["PORT"]
+
+    # アクティブロボットのリストを解析
+    ACTIVE_ROBOTS = [int(r.strip()) for r in CONFIG.get("ACTIVE_ROBOTS", "1").split(",")]
+
     MODE_NUM = CONFIG["MODE_NUM"]
 
     MODE_MAP = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai"}

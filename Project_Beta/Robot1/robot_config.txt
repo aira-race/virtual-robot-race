@@ -1,0 +1,26 @@
+# Robot1 Configuration
+# ロボット個別の設定ファイル
+
+# 制御モード (1: keyboard, 2: table, 3: rule_based, 4: ai)
+MODE_NUM=1
+
+# ロボットID (自動設定されるが、明示的に指定も可能)
+ROBOT_ID=R1
+
+# プレイヤー名 (最大10文字の英数字)
+NAME=Player0001
+
+# レース参加フラグ (1: 参加してPOST, 0: 観戦のみ)
+RACE_FLAG=1
+
+# 画像保存 (1: 保存する, 0: 保存しない)
+JPEG_SAVE=1
+
+# ビデオ自動生成 (1: 有効, 0: 無効)
+AUTO_MAKE_VIDEO=1
+
+# ビデオFPS
+VIDEO_FPS=20
+
+# FPS自動推測 (1: 有効, 0: 無効)
+INFER_FPS=1
