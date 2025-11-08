@@ -38,11 +38,12 @@ def _resolve_outpath(out_dir: str, *, frame_name: Optional[str] = None, src_path
         out_name = f"{ts}_latest_RGB_{tag}.jpg"
     return os.path.join(out_dir, out_name)
 
-def _draw_torque_vector(img: np.ndarray, left_tq: float, right_tq: float, *, radius: int = 34, pad: int = 16) -> None:
+def _draw_steer_vector(img: np.ndarray, drive_tq: float, steer_ang: float, *, radius: int = 34, pad: int = 16) -> None:
     """
-    Draw a “combined torque vector” in the top-right (no arrow head).
-    Angle = atan2(L - R, L + R)  (0° = up, positive is right)
-    Length = clamp(hypot(L+R, L-R)/2, 0..1)
+    Draw a "steer control vector" in the top-right.
+    - Angle = steer_ang (rad, + is right turn)
+    - Length = abs(drive_tq) (0..1)
+    - Color: green for forward, red for reverse
     """
     h, w = img.shape[:2]
     cx = w - pad - radius
@@ -53,29 +54,30 @@ def _draw_torque_vector(img: np.ndarray, left_tq: float, right_tq: float, *, rad
     cv2.line(img, (cx - radius, cy), (cx + radius, cy), (210, 210, 210), 1, cv2.LINE_AA)
     cv2.line(img, (cx, cy - radius), (cx, cy + radius), (210, 210, 210), 1, cv2.LINE_AA)
 
-    L, R = float(left_tq), float(right_tq)
-    sum_lr  = L + R
-    diff_lr = L - R
-    angle   = math.atan2(diff_lr, sum_lr)                  # 0=up, + is right
-    length  = min(1.0, math.hypot(sum_lr, diff_lr) / 2.0)  # 0..1
+    drive = float(drive_tq)
+    steer = float(steer_ang)
+    length = min(1.0, abs(drive))  # 0..1
 
     r_pix = int(radius * length)
-    dx = int(r_pix * math.sin(angle))
-    dy = int(-r_pix * math.cos(angle))  # up is negative in image coords
+    dx = int(r_pix * math.sin(steer))
+    dy = int(-r_pix * math.cos(steer))  # up is negative in image coords
 
-    # Centered line (black outline → white)
+    # Color: green for forward, red for reverse
+    color = (0, 255, 0) if drive >= 0 else (0, 0, 255)  # BGR
+
+    # Centered line (black outline → colored)
     cv2.line(img, (cx, cy), (cx + dx, cy + dy), (0, 0, 0), 3, cv2.LINE_AA)
-    cv2.line(img, (cx, cy), (cx + dx, cy + dy), (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.line(img, (cx, cy), (cx + dx, cy + dy), color, 2, cv2.LINE_AA)
 
-# ------------- 1) Minimal HUD on SW canvas + torque vector (preferred) -------------
+# ------------- 1) Minimal HUD on SW canvas + steer vector (preferred) -------------
 def annotate_and_save_canvas(
     canvas_bgr: Optional[np.ndarray],
     *,
     out_dir: str = "debug",
     lateral_px: Optional[float] = None,    # accepted but not drawn (SW HUD handles it)
     theta_deg: Optional[float] = None,     # accepted but not drawn
-    torque_left: float = 0.0,
-    torque_right: float = 0.0,
+    drive_torque: float = 0.0,
+    steer_angle: float = 0.0,
     mode: str = "normal",
     frame_name: Optional[str] = None,
     src_path: Optional[str] = None,
@@ -84,7 +86,7 @@ def annotate_and_save_canvas(
     line: int = 22,                        # line spacing
 ) -> Optional[str]:
     """
-    Overlay a minimal HUD (mode + torques) on the already-rendered SW canvas and save it.
+    Overlay a minimal HUD (mode + drive/steer) on the already-rendered SW canvas and save it.
     Returns the output path, or None if canvas_bgr is None.
     """
     if canvas_bgr is None:
@@ -92,21 +94,22 @@ def annotate_and_save_canvas(
 
     img = canvas_bgr.copy()
 
-    # Top-left HUD: Mode / left & right torques (no black panel)
+    # Top-left HUD: Mode / drive & steer (no black panel)
+    steer_deg = math.degrees(steer_angle)
     x, y = origin
-    _put_text(img, f"Mode: {mode}",                 (x, y)); y += line
-    _put_text(img, f"LeftTq : {torque_left:+.3f}",  (x, y)); y += line
-    _put_text(img, f"RightTq: {torque_right:+.3f}", (x, y))
+    _put_text(img, f"Mode: {mode}",                           (x, y)); y += line
+    _put_text(img, f"Drive : {drive_torque:+.3f}",            (x, y)); y += line
+    _put_text(img, f"Steer : {steer_angle:+.3f}rad ({steer_deg:+.1f}°)", (x, y))
 
-    # Top-right combined vector (kept compact and padded not to overlap ROI)
-    _draw_torque_vector(img, torque_left, torque_right, radius=34, pad=16)
+    # Top-right steer vector (kept compact and padded not to overlap ROI)
+    _draw_steer_vector(img, drive_torque, steer_angle, radius=34, pad=16)
 
     out_path = _resolve_outpath(out_dir, frame_name=frame_name, src_path=src_path)
     cv2.imwrite(out_path, img, [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)])
     print(f"[DebugUtils] Saved {out_path}")
     return out_path
 
-# ----------- 2) Fallback: full HUD on raw frame + torque vector -----------
+# ----------- 2) Fallback: full HUD on raw frame + steer vector -----------
 def overlay_and_save(
     pil_img,
     sw_result,
@@ -120,8 +123,8 @@ def overlay_and_save(
 ) -> str:
     """
     When no SW canvas is available, draw a full HUD on the raw frame and save:
-      - Mode, Lateral, Theta, Left/Right torques
-      - Combined torque vector (if torques available)
+      - Mode, Lateral, Theta, Drive/Steer
+      - Steer control vector (if drive/steer available)
     Returns the output path.
     """
     ensure_dir(out_dir)
@@ -130,19 +133,23 @@ def overlay_and_save(
     lateral = getattr(sw_result, "lateral_px", None) if sw_result is not None else None
     theta   = getattr(sw_result, "theta_deg",  None) if sw_result is not None else None
 
-    lt   = (driver_debug or {}).get("left_torque")
-    rt   = (driver_debug or {}).get("right_torque")
+    drive = (driver_debug or {}).get("drive_torque")
+    steer = (driver_debug or {}).get("steer_angle")
     mode = (driver_debug or {}).get("lane_mode", "unknown")
 
     x, y = origin
     _put_text(bgr, f"Mode: {mode}", (x, y)); y += line
     _put_text(bgr, f"Lateral : {'None' if lateral is None else f'{lateral:+.1f} px'}", (x, y)); y += line
     _put_text(bgr, f"Theta   : {'None' if theta   is None else f'{theta:+.1f} deg'}", (x, y)); y += line
-    _put_text(bgr, f"LeftTq  : {'None' if lt is None else f'{lt:+.3f}'}",  (x, y)); y += line
-    _put_text(bgr, f"RightTq : {'None' if rt is None else f'{rt:+.3f}'}", (x, y))
+    _put_text(bgr, f"Drive   : {'None' if drive is None else f'{drive:+.3f}'}",  (x, y)); y += line
+    if steer is not None:
+        steer_deg = math.degrees(steer)
+        _put_text(bgr, f"Steer   : {steer:+.3f}rad ({steer_deg:+.1f}°)", (x, y))
+    else:
+        _put_text(bgr, f"Steer   : None", (x, y))
 
-    if lt is not None and rt is not None:
-        _draw_torque_vector(bgr, float(lt), float(rt), radius=34, pad=16)
+    if drive is not None and steer is not None:
+        _draw_steer_vector(bgr, float(drive), float(steer), radius=34, pad=16)
 
     out_path = _resolve_outpath(out_dir, frame_name=frame_name, src_path=src_path)
     cv2.imwrite(out_path, bgr, [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)])

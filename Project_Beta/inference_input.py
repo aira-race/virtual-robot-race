@@ -1,5 +1,6 @@
 # inference_input.py
-# Inference loop using a trained PyTorch model to predict wheel torques from RGB image + SOC
+# Inference loop using a trained PyTorch model to predict drive/steer from RGB image + SOC
+# Updated for steer-type control (driveTorque, steerAngle)
 
 import time
 import os
@@ -10,9 +11,18 @@ from PIL import Image
 
 import data_manager  # For reading the latest SOC value
 
-# Global torque values to be accessed externally
-leftTorque = 0.0
-rightTorque = 0.0
+# Global control values to be accessed externally
+driveTorque = 0.0
+steerAngle = 0.0
+
+def get_latest_command():
+    """Return the latest control command in the expected format."""
+    return {
+        "type": "control",
+        "robot_id": "R1",
+        "driveTorque": driveTorque,
+        "steerAngle": steerAngle,
+    }
 
 def saturate(value, min_val=-1.0, max_val=1.0):
     """Clamp the input value within the specified range."""
@@ -30,8 +40,8 @@ def get_latest_rgb_path():
         pass
     return os.path.join("data_interactive", "latest_RGB_a.jpg")  # Default fallback
 
-class TorqueNet(nn.Module):
-    """Simple MLP for torque prediction based on image + SOC."""
+class SteerNet(nn.Module):
+    """Simple MLP for drive/steer prediction based on image + SOC."""
     def __init__(self, input_size):
         super().__init__()
         self.fc = nn.Sequential(
@@ -39,24 +49,31 @@ class TorqueNet(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 128),
             nn.ReLU(),
-            nn.Linear(128, 2)
+            nn.Linear(128, 2)  # Output: [drive_torque, steer_angle]
         )
 
     def forward(self, x):
         return self.fc(x)
 
 def run_ai_loop(stop_event):
-    """Main loop: loads latest image and SOC, runs inference, outputs torques."""
-    global leftTorque, rightTorque
+    """Main loop: loads latest image and SOC, runs inference, outputs drive/steer."""
+    global driveTorque, steerAngle
 
     print("[Inference] AI loop started.")
 
     # Load trained model
     model_path = os.path.join(os.path.dirname(__file__), "models", "model.pth")
     input_size = 224 * 224 * 3 + 1  # Image (flattened) + 1 SOC
-    model = TorqueNet(input_size)
-    model.load_state_dict(torch.load(model_path, map_location="cpu"))
-    model.eval()
+    model = SteerNet(input_size)
+
+    try:
+        model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        model.eval()
+        print(f"[Inference] Model loaded from {model_path}")
+    except FileNotFoundError:
+        print(f"[Inference] WARNING: Model not found at {model_path}")
+        print("[Inference] Using dummy predictions (drive=0.0, steer=0.0)")
+        model = None
 
     # Image preprocessing
     transform = transforms.Compose([
@@ -77,21 +94,31 @@ def run_ai_loop(stop_event):
                 time.sleep(0.05)
                 continue
 
-            image_tensor = transform(image).view(-1)
             soc = data_manager.get_latest_soc()
-            soc_tensor = torch.tensor([soc], dtype=torch.float32)
+            if soc is None:
+                soc = 1.0  # Default SOC if unavailable
 
-            input_tensor = torch.cat([image_tensor, soc_tensor]).unsqueeze(0)
+            if model is not None:
+                # Run inference
+                image_tensor = transform(image).view(-1)
+                soc_tensor = torch.tensor([soc], dtype=torch.float32)
+                input_tensor = torch.cat([image_tensor, soc_tensor]).unsqueeze(0)
 
-            with torch.no_grad():
-                output = model(input_tensor)
-                raw_left = output[0][0].item()
-                raw_right = output[0][1].item()
+                with torch.no_grad():
+                    output = model(input_tensor)
+                    raw_drive = output[0][0].item()
+                    raw_steer = output[0][1].item()
 
-                leftTorque = saturate(raw_left)
-                rightTorque = saturate(raw_right)
+                    driveTorque = saturate(raw_drive, -1.0, 1.0)
+                    steerAngle = saturate(raw_steer, -0.785, 0.785)  # ~±45 deg limit
+            else:
+                # Dummy output if no model
+                driveTorque = 0.0
+                steerAngle = 0.0
 
-            print(f"[Inference] Torque: L={leftTorque:.3f}, R={rightTorque:.3f}, SOC={soc:.2f}")
+            import math
+            steer_deg = math.degrees(steerAngle)
+            print(f"[Inference] Drive={driveTorque:+.3f}, Steer={steerAngle:+.3f}rad({steer_deg:+.1f}°), SOC={soc:.2f}")
 
         except Exception as e:
             print(f"[Inference] Error: {e}")

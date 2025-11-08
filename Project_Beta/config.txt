@@ -11,17 +11,17 @@ PORT=12346
 # 2 = table (CSV playback)
 # 3 = rule_based (rule-based logic control)
 # 4 = ai (use AI model inference)
-MODE_NUM=1
+MODE_NUM=4
 
 # Unity launch mode:
 # 0 = Launch Unity automatically from Unity_Build.exe
 # 1 = Launch Unity manually (useful for debugging)
-DEBUG_MODE=1
+DEBUG_MODE=0
 
 # JPEG image saving:
 # 0 = Delete images after run (lightweight mode)
 # 1 = Save images for AI training
-JPEG_SAVE=1
+JPEG_SAVE=0
 
 # Player settings
 # NAME: Player name (up to 10 characters, alphanumeric only)

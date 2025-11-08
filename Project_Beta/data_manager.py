@@ -75,6 +75,23 @@ def read_last_run_dir() -> Optional[Path]:
         return None
 
 
+def get_latest_soc() -> Optional[float]:
+    """Read the latest SOC value from the interactive data file."""
+    try:
+        soc_str = SOC_FILE.read_text(encoding="utf-8").strip()
+        return float(soc_str)
+    except Exception:
+        return None
+
+
+def get_latest_frame_name() -> Optional[str]:
+    """Read the latest frame filename from the interactive data file."""
+    try:
+        return LATEST_FRAME_NAME_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        return None
+
+
 class DataManager:
     def __init__(self, base_dir: Path):
         self.base_dir = Path(base_dir)
@@ -82,10 +99,6 @@ class DataManager:
 
         self.current_run_dir: Optional[Path] = None
         self.images_dir: Optional[Path] = None
-
-        self._frames_map_path: Optional[Path] = None
-        self._frames_map_fp = None
-        self._frames_map_writer = None
 
         self._preview_toggle_a = True
 
@@ -100,13 +113,6 @@ class DataManager:
         self.current_run_dir.mkdir(parents=True, exist_ok=True)
         self.images_dir.mkdir(parents=True, exist_ok=True)
 
-        # create frames_map.csv
-        self._frames_map_path = self.current_run_dir / "frames_map.csv"
-        self._frames_map_fp = open(self._frames_map_path, "w", newline="", encoding="utf-8")
-        self._frames_map_writer = csv.writer(self._frames_map_fp)
-        self._frames_map_writer.writerow(
-            ["tick", "utc_ms", "filename", "soc", "status", "drive_torque", "steer_angle"]
-        )
         print(f"[DataManager] New run created → {self.current_run_dir}")
 
         try:
@@ -144,39 +150,6 @@ class DataManager:
         except Exception as e:
             print(f"[DataManager] Failed to update preview: {e}")
 
-    def append_frame_map(self, tick, utc_ms, filename, soc, status, drive_tq, steer_ang) -> None:
-        """Append one telemetry row to frames_map.csv. Missing values are zero-filled."""
-        if self._frames_map_writer is None:
-            return
-
-        # 0埋め（空欄がCSVに出ないように）
-        def f_or_0(v):
-            try:
-                return float(v)
-            except (TypeError, ValueError):
-                return 0.0
-
-        drive_tq = f_or_0(drive_tq)
-        steer_ang = f_or_0(steer_ang)
-
-        self._frames_map_writer.writerow([tick, utc_ms, filename, soc, status, drive_tq, steer_ang])
-
-        # 最新SOCを記録（GUIなどの参照用）
-        if soc is not None:
-            try:
-                _write_text(SOC_FILE, f"{float(soc):.4f}")
-            except Exception:
-                pass
-
-    def flush_frame_map(self) -> None:
-        if self._frames_map_fp:
-            self._frames_map_fp.flush()
-
-    def close_frame_map(self) -> None:
-        if self._frames_map_fp:
-            self._frames_map_fp.close()
-            self._frames_map_fp = None
-            self._frames_map_writer = None
 
     # -------------------------
     # Final metadata
@@ -206,7 +179,7 @@ class DataManager:
             w = csv.writer(fp)
             # === ヘッダ ===
             w.writerow([
-                "tick", "time_ms", "filename", "soc",
+                "tick", "session_time_ms", "race_time_ms", "filename", "soc",
                 "drive_torque", "steer_angle",
                 "drive_valid", "steer_valid",
                 "status", "pos_x", "pos_y", "pos_z",
@@ -235,23 +208,25 @@ class DataManager:
                         continue
 
                     # 数値系の安全取得
-                    tick   = i_or_0(r.get("tick"))
-                    t_ms   = i_or_0(r.get("time_ms"))
-                    soc    = f_or_0(r.get("soc"))
-                    drive  = f_or_0(r.get("drive_torque") or r.get("driveTorque"))
-                    steer  = f_or_0(r.get("steer_angle") or r.get("steerAngle"))
-                    d_val  = i_or_0(r.get("drive_valid"))
-                    s_val  = i_or_0(r.get("steer_valid"))
-                    pos_x  = f_or_0(r.get("pos_x"))
-                    pos_y  = f_or_0(r.get("pos_y"))
-                    pos_z  = f_or_0(r.get("pos_z"))
-                    yaw    = f_or_0(r.get("yaw_deg") or r.get("yaw"))
-                    err    = i_or_0(r.get("error_code"))
+                    tick         = i_or_0(r.get("tick"))
+                    session_ms   = i_or_0(r.get("session_time_ms"))
+                    race_ms      = i_or_0(r.get("race_time_ms"))
+                    soc          = f_or_0(r.get("soc"))
+                    drive        = f_or_0(r.get("drive_torque") or r.get("driveTorque"))
+                    steer        = f_or_0(r.get("steer_angle") or r.get("steerAngle"))
+                    d_val        = i_or_0(r.get("drive_valid"))
+                    s_val        = i_or_0(r.get("steer_valid"))
+                    pos_x        = f_or_0(r.get("pos_x"))
+                    pos_y        = f_or_0(r.get("pos_y"))
+                    pos_z        = f_or_0(r.get("pos_z"))
+                    yaw          = f_or_0(r.get("yaw_deg") or r.get("yaw"))
+                    err          = i_or_0(r.get("error_code"))
 
                     # 行出力
                     w.writerow([
                         tick,
-                        t_ms,
+                        session_ms,
+                        race_ms,
                         r.get("filename") or f"frame_{tick:06d}.jpg",
                         soc,
                         drive,
@@ -271,7 +246,6 @@ class DataManager:
         print(f"[DataManager] metadata.csv written → {meta_csv}")
         self._copy_unity_log()
         self._maybe_delete_images_if_flagged()
-        self.close_frame_map()
 
 
     # -------------------------

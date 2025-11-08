@@ -1,12 +1,15 @@
 # rule_based_algorithms/driver_model.py
 # ----------------------------------------------------------------------
+# STEER-TYPE CONTROL VERSION
 # Higher layer decides lane_mode ("normal" / "hold" / "search") and lost_age.
-# This driver ONLY computes torques. Start(GO) gating and safety are handled here.
+# This driver computes: (drive_torque, steer_angle) for steer-type robots.
 #
 # Sign conventions:
 #   lateral_px : right is + [px] (offset from image center)
 #   theta_deg  : 0° is up, tilting to the right is + [deg]
-#   Output     : + means forward when forward_sign=+1
+#   Output:
+#     drive_torque : forward torque (-1.0 to +1.0, + is forward)
+#     steer_angle  : steering angle in radians (+ is right turn)
 # ----------------------------------------------------------------------
 
 from __future__ import annotations
@@ -32,17 +35,13 @@ class DriverConfig:
     slow_w_lateral: float = 0.60
 
     # Steering blend (Yaw: right is +)
-    k_theta: float = 0.45
-    k_lateral: float = 0.40
-    yaw_mix_gain: float = 0.50
+    k_theta: float = 0.90          # Gain for theta (angle)
+    k_lateral: float = 0.60        # Gain for lateral offset
+    steer_limit: float = 0.785     # Max steer angle (radians, ~45 deg)
 
     # Output shaping
     torque_limit: float = 1.00
-    alpha_smooth: float = 0.65  # 0: off, 1: heavy smoothing (IIR)
-
-    # Anti-pivot guard (keep outer wheel driving forward; allow limited negative inner)
-    anti_pivot_limit: float = 0.07   # min inner (allows down to -0.30 if you raise this)
-    min_outer_torque: float = 0.10   # floor for the outer wheel
+    alpha_smooth: float = 0.30     # 0: off, 1: heavy smoothing (IIR)
 
     # Battery (SOC) scaling
     use_soc_scaling: bool = True
@@ -54,33 +53,30 @@ class DriverConfig:
     invalid_brake: float = 0.0        # output when NO-GO etc. (0.0 recommended)
     require_start_go: bool = True     # True: must stop if NO-GO
 
-    allow_pivot: bool = True          # True to disable non-negative clamp in _mix_lr (not used here)
-    yaw_clip_margin: float = 0.01     # small margin to avoid sticking exactly at 0
-
     # ====== Lane-lost related (pure math parameters; mode decision is upstream) ======
     hold_decay_per_frame: float = 0.90   # decay ratio during hold
     search_pivot: bool = True            # True: pivot in place / False: slow forward while turning
     search_speed: float = 0.00           # forward component (0.0 when pivoting)
-    search_yaw_const: float = 0.18       # [rad] constant yaw to clockwise (right)
+    search_steer_const: float = 0.6      # [rad] constant steer angle during search (~34 deg)
     loop_period_s: float = 0.050         # for logs only
 
 
 class DriverModel:
-    """Given lane_mode, produce left/right torques only (no I/O here)."""
+    """Given lane_mode, produce (drive_torque, steer_angle) for steer-type control."""
 
     def __init__(self, cfg: DriverConfig):
         self.cfg = cfg
-        self._prev_left = 0.0
-        self._prev_right = 0.0
+        self._prev_drive = 0.0
+        self._prev_steer = 0.0
         self._half_w = max(
             1.0,
             (cfg.lateral_norm_halfwidth_px
              if cfg.lateral_norm_halfwidth_px is not None
              else cfg.image_width * 0.5)
         )
-        # For hold mode, remember most recent base/yaw
+        # For hold mode, remember most recent base/steer
         self._last_base = 0.0
-        self._last_yaw  = 0.0
+        self._last_steer = 0.0
         self.last_debug: Dict[str, float | int | str | bool | None] = {}
 
     def update(
@@ -94,18 +90,18 @@ class DriverModel:
         lane_mode: str = "normal",   # "normal" / "hold" / "search"
         lost_age: int = 0,           # consecutive lost-frame count (for info)
     ) -> Tuple[float, float]:
-        """Compute (left, right) torques for the current frame."""
+        """Compute (drive_torque, steer_angle) for the current frame."""
         # Geometry update
         if image_width is not None and image_width > 0:
             self._half_w = max(1.0, image_width * 0.5)
 
         # Start gate
         if self.cfg.require_start_go and not start_go:
-            lt = rt = self.cfg.invalid_brake * self.cfg.forward_sign
-            lt, rt = self._smooth(lt, rt)
+            drive = steer = self.cfg.invalid_brake * self.cfg.forward_sign
+            drive, steer = self._smooth(drive, steer)
             self._store_debug(False, False, lane_mode, lateral_px, theta_deg,
-                              0.0, 0.0, 0.0, lt, rt, soc, None, None, lost_age)
-            return lt, rt
+                              0.0, 0.0, 0.0, drive, steer, soc, None, None, lost_age)
+            return drive, steer
 
         # Angle sanity: if theta is absurd, treat as invalid detection
         if theta_deg is not None and abs(float(theta_deg)) > self.cfg.theta_hard_limit_deg:
@@ -127,12 +123,14 @@ class DriverModel:
             else:
                 lateral_n = float(lateral_px) / self._half_w
                 theta_rad = math.radians(float(theta_deg))
-                yaw = self.cfg.k_theta * theta_rad + self.cfg.k_lateral * lateral_n
 
-                # Slow down in curves
-                steer_cost = (self.cfg.slow_w_theta * abs(theta_rad) +
-                              self.cfg.slow_w_lateral * abs(lateral_n))
-                base = self.cfg.v_max * max(0.0, 1.0 - steer_cost)
+                # Calculate steer angle directly
+                steer = self.cfg.k_theta * theta_rad + self.cfg.k_lateral * lateral_n
+                steer = _clip(steer, -self.cfg.steer_limit, self.cfg.steer_limit)
+
+                # Slow down in curves based on steer angle
+                steer_cost = abs(steer) / self.cfg.steer_limit
+                base = self.cfg.v_max * max(0.0, 1.0 - steer_cost * 0.7)
                 base = max(self.cfg.v_min, min(self.cfg.v_max, base))
 
                 # Ensure a minimum base speed when cornering hard
@@ -142,75 +140,48 @@ class DriverModel:
                     base = max(base, corner_base_floor)
 
                 self._last_base = base
-                self._last_yaw  = yaw
+                self._last_steer = steer
 
-                left, right = self._mix_lr(base, yaw, scale)
-                left, right = self._post_process(left, right, yaw)
+                drive = base * scale * self.cfg.forward_sign
+                drive, steer = self._post_process(drive, steer)
                 self._store_debug(True, True, "normal", lateral_px, theta_deg,
-                                  lateral_n, theta_rad, yaw, left, right, soc, base, scale, lost_age)
-                return left, right
+                                  lateral_n, theta_rad, steer, drive, steer, soc, base, scale, lost_age)
+                return drive, steer
 
         # ---------------- hold ----------------
         if mode == "hold":
             decay = self.cfg.hold_decay_per_frame ** max(0, int(lost_age))
             base = self._last_base * decay
-            yaw  = self._last_yaw  * decay
-            left, right = self._mix_lr(base, yaw, scale)
-            left, right = self._post_process(left, right, yaw)
+            steer = self._last_steer * decay
+            drive = base * scale * self.cfg.forward_sign
+            drive, steer = self._post_process(drive, steer)
             self._store_debug(False, True, "hold", lateral_px, theta_deg,
-                              0.0, 0.0, yaw, left, right, soc, base, scale, lost_age)
-            return left, right
+                              0.0, 0.0, steer, drive, steer, soc, base, scale, lost_age)
+            return drive, steer
 
         # ---------------- search ----------------
         base = _clip(self.cfg.search_speed, self.cfg.v_min, self.cfg.v_max) if not self.cfg.search_pivot else 0.0
-        yaw  = abs(self.cfg.search_yaw_const)  # clockwise
-        left, right = self._mix_lr(base, yaw, scale)
-        left, right = self._post_process(left, right, yaw)
+        steer = abs(self.cfg.search_steer_const)  # constant right turn
+        drive = base * scale * self.cfg.forward_sign
+        drive, steer = self._post_process(drive, steer)
         self._store_debug(False, True, "search", lateral_px, theta_deg,
-                          0.0, 0.0, yaw, left, right, soc, base, scale, lost_age)
-        return left, right
+                          0.0, 0.0, steer, drive, steer, soc, base, scale, lost_age)
+        return drive, steer
 
     # ------------ helpers ------------
-    def _mix_lr(self, base: float, yaw: float, scale: float) -> Tuple[float, float]:
-        """Blend base & yaw into left/right torques (before limits/smoothing)."""
-        fs = self.cfg.forward_sign
-        y = self.cfg.yaw_mix_gain * yaw
+    def _post_process(self, drive: float, steer: float) -> Tuple[float, float]:
+        """Apply limits and smooth."""
+        drive = _clip(drive, -self.cfg.torque_limit, self.cfg.torque_limit)
+        steer = _clip(steer, -self.cfg.steer_limit, self.cfg.steer_limit)
+        return self._smooth(drive, steer)
 
-        # Reduce yaw at low speed (empirical)
-        # current: 0.3 + 0.7 * (base / v_max)
-        yaw_scale = 0.3 + 0.7 * (base / max(1e-6, self.cfg.v_max))
-        y *= yaw_scale
-
-        # No non-neg clamp here (inner can go slightly negative by design)
-        left  = (base + y) * scale * fs
-        right = (base - y) * scale * fs
-        return left, right
-
-    def _post_process(self, left: float, right: float, yaw: float) -> Tuple[float, float]:
-        """Apply torque limits and anti-pivot guard, then smooth."""
-        left  = _clip(left,  -self.cfg.torque_limit, self.cfg.torque_limit)
-        right = _clip(right, -self.cfg.torque_limit, self.cfg.torque_limit)
-
-        apl = getattr(self.cfg, "anti_pivot_limit", None)  # e.g., 0.07–0.15
-        mot = getattr(self.cfg, "min_outer_torque", 0.0)   # e.g., 0.05–0.10
-
-        if apl is not None:
-            if yaw >= 0.0:          # turning right
-                left  = max(left,  +mot)   # outer must drive forward
-                right = max(right, -apl)   # inner allowed down to -apl
-            else:                   # turning left
-                right = max(right, +mot)
-                left  = max(left,  -apl)
-
-        return self._smooth(left, right)
-
-    def _smooth(self, lt: float, rt: float) -> Tuple[float, float]:
-        """IIR smoothing on output torques."""
+    def _smooth(self, drive: float, steer: float) -> Tuple[float, float]:
+        """IIR smoothing on output commands."""
         a = _clip(self.cfg.alpha_smooth, 0.0, 1.0)
-        lt_s = (1 - a) * lt + a * self._prev_left
-        rt_s = (1 - a) * rt + a * self._prev_right
-        self._prev_left, self._prev_right = lt_s, rt_s
-        return lt_s, rt_s
+        drive_s = (1 - a) * drive + a * self._prev_drive
+        steer_s = (1 - a) * steer + a * self._prev_steer
+        self._prev_drive, self._prev_steer = drive_s, steer_s
+        return drive_s, steer_s
 
     def _store_debug(
         self,
@@ -221,9 +192,9 @@ class DriverModel:
         theta_deg: Optional[float],
         lateral_n: float,
         theta_rad: float,
-        yaw: float,
-        left: float,
-        right: float,
+        steer_cmd: float,
+        drive: float,
+        steer: float,
         soc: Optional[float],
         base: Optional[float],
         scale: Optional[float],
@@ -239,18 +210,15 @@ class DriverModel:
             "theta_deg": None if theta_deg is None else float(theta_deg),
             "lateral_norm": float(lateral_n),
             "theta_rad": float(theta_rad),
-            "yaw_cmd": float(yaw),
+            "steer_cmd": float(steer_cmd),
             "base_speed": None if base is None else float(base),
             "soc": None if soc is None else float(soc),
             "soc_scale": None if scale is None else float(scale),
-            "left_torque": float(left),
-            "right_torque": float(right),
+            "drive_torque": float(drive),
+            "steer_angle": float(steer),
             "half_width_px": float(self._half_w),
             "forward_sign": int(self.cfg.forward_sign),
             "loop_period_s": float(self.cfg.loop_period_s),
-            # extra for downstream debug/overlays
-            "apl": float(getattr(self.cfg, "anti_pivot_limit", -1.0)),
-            "mot": float(getattr(self.cfg, "min_outer_torque", -1.0)),
         }
 
 
@@ -271,7 +239,7 @@ if __name__ == "__main__":
 
     cfg = DriverConfig(image_width=args.image_width, forward_sign=args.forward_sign)
     drv = DriverModel(cfg)
-    lt, rt = drv.update(
+    drive, steer = drv.update(
         lateral_px=args.lateral_px,
         theta_deg=args.theta_deg,
         soc=args.soc,
@@ -281,5 +249,5 @@ if __name__ == "__main__":
         lane_mode=args.lane_mode,
         lost_age=args.lost_age,
     )
-    print(f"left={lt:+.3f}, right={rt:+.3f}")
+    print(f"drive={drive:+.3f}, steer={steer:+.3f} rad ({math.degrees(steer):+.1f} deg)")
     print("debug:", drv.last_debug)

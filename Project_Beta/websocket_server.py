@@ -26,14 +26,11 @@ from pathlib import Path
 from threading import Event
 import websockets
 import config
-from data_manager import DataManager, BASE_DIR
+from data_manager import DataManager
 
 # ---------------------------------------------------------------------------
-# Setup data session
+# Setup data session (initialized on Unity connection)
 # ---------------------------------------------------------------------------
-dm = DataManager(BASE_DIR)
-run_dir, images_dir = dm.start_new_run()
-
 # Control input module selection
 if config.MODE == "keyboard":
     import keyboard_input as control_module
@@ -165,12 +162,13 @@ async def receive_stream(websocket: websockets.WebSocketServerProtocol) -> None:
                     except Exception as e:
                         print(f"[Server] Failed to save image {filename}: {e}")
 
-                # Optional: log per-frame info
-                drive = data.get("driveTorque")
-                steer = data.get("steerAngle")
+                # Save SOC to interactive data for rule_based/ai modes
                 soc = data.get("soc")
-                status = data.get("status", "")
-                _dm.append_frame_map(tick, utc_ms, filename, soc, status, drive, steer)
+                if soc is not None:
+                    from data_manager import _write_text, SOC_FILE
+                    _write_text(SOC_FILE, f"{float(soc):.4f}")
+
+                # Note: Per-frame telemetry is recorded in metadata.csv at race end
 
             # --- Final race summary ---
             elif mtype in ("race_data", "RaceData"):

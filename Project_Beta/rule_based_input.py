@@ -27,8 +27,17 @@ except Exception:
     get_latest_frame_name = None
 
 # --- Globals (read by websocket_server) ---
-leftTorque = 0.0
-rightTorque = 0.0
+driveTorque = 0.0
+steerAngle = 0.0
+
+def get_latest_command():
+    """Return the latest control command in the expected format."""
+    return {
+        "type": "control",
+        "robot_id": "R1",
+        "driveTorque": driveTorque,
+        "steerAngle": steerAngle,
+    }
 
 # --- Internal flags ---
 _started_latch = False        # Once GO is detected, stays True
@@ -69,7 +78,7 @@ def get_latest_rgb_path():
     return os.path.join("data_interactive", "latest_RGB_a.jpg")  # fallback
 
 
-# Driver (final torque decision maker)
+# Driver (final decision maker for steer-type control)
 _driver = DriverModel(DriverConfig(
     image_width=224,
     forward_sign=+1,
@@ -77,7 +86,7 @@ _driver = DriverModel(DriverConfig(
     v_max=0.75,
     k_theta=0.90,
     k_lateral=0.60,
-    yaw_mix_gain=1.00,
+    steer_limit=0.785,  # ~45 degrees max
     alpha_smooth=0.30,
     torque_limit=1.00,
     theta_hard_limit_deg=80.0,
@@ -91,9 +100,9 @@ def run_rule_based_loop(stop_event):
     Main rule-based control loop (target 50 ms).
     - Waits for start signal (latched).
     - After GO: runs sliding-window lane detection and driver_model update.
-    - Always outputs torques (leftTorque, rightTorque).
+    - Always outputs (driveTorque, steerAngle) for steer-type control.
     """
-    global leftTorque, rightTorque, _started_latch, _lost_age
+    global driveTorque, steerAngle, _started_latch, _lost_age
 
     print("[RuleBased] Control loop started.")
     next_t = time.monotonic()
@@ -147,8 +156,8 @@ def run_rule_based_loop(stop_event):
                 _lost_age += 1
                 lane_mode = "hold" if _lost_age <= HOLD_FRAMES else "search"
 
-            # === Driver update (torque decision) ===
-            lt, rt = _driver.update(
+            # === Driver update (drive/steer decision) ===
+            drive, steer = _driver.update(
                 lateral_px=lateral,
                 theta_deg=theta,
                 soc=soc,
@@ -159,8 +168,8 @@ def run_rule_based_loop(stop_event):
                 lost_age=_lost_age,
             )
 
-            leftTorque = saturate(lt)
-            rightTorque = saturate(rt)
+            driveTorque = saturate(drive)
+            steerAngle = saturate(steer, -0.785, 0.785)  # Limit steer to ~±45 deg
 
             # === Debug overlay save (per frame, after GO) ===
             if SAVE_DEBUG_OVERLAYS and start_go:
@@ -174,8 +183,8 @@ def run_rule_based_loop(stop_event):
                             out_dir="debug",
                             lateral_px=lateral,
                             theta_deg=theta,
-                            torque_left=leftTorque,
-                            torque_right=rightTorque,
+                            drive_torque=driveTorque,
+                            steer_angle=steerAngle,
                             mode=lane_mode,
                             frame_name=frame_name,
                             src_path=img_path,
@@ -200,9 +209,11 @@ def run_rule_based_loop(stop_event):
             lat_str = "None" if (lateral is None) else f"{lateral:+.1f}"
             tht_str = "None" if (theta is None) else f"{theta:+.1f}"
             soc_str = "None" if (soc is None) else f"{float(soc):.2f}"
+            import math
+            steer_deg = math.degrees(steerAngle)
 
             print(
-                f"[RuleBased] Torque L={leftTorque:+.2f} R={rightTorque:+.2f} | "
+                f"[RuleBased] Drive={driveTorque:+.2f} Steer={steerAngle:+.3f}rad({steer_deg:+.1f}°) | "
                 f"GO={start_go} LaneOK={lane_ok}, {mode_label} LostAge={_lost_age} "
                 f"Lat={lat_str} Theta={tht_str} SOC={soc_str}"
             )

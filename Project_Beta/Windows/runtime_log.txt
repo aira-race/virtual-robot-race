@@ -1,22 +1,20 @@
-[Logger Initialized at 2025/10/04 7:00:47][07:00:47.084] [Log] [FileLogger] Logging to: C:\AARACE\GitProjects\virtual-robot-race\Project_Beta\Windows\runtime_log.txt
-[07:00:47.608] [Log] [WebSocketClient] Subscribed to Tick (20fps).
-[07:00:47.611] [Log] [PlayerCameraRGB] Initialized & subscribed to Tick (20fps).
-[07:00:47.613] [Log] [DataLogger] Initialized & subscribed to Tick.
-[07:00:47.613] [Log] [GameManager] Game Started.TickScheduler initialized (20fps)
-[07:00:47.614] [Log] [WebSocketClient] Start() begin.
-[07:00:47.621] [Log] [WebSocketClient] Connecting...
-[07:00:47.640] [Log] [TorqueController] Drag & Inertia settings applied.
-[07:00:47.652] [Log] [RaceManager] Race Started!
-[07:00:47.745] [Log] [WebSocketClient] Connected to server.
-[07:00:47.766] [Log] [WebSocketClient] Identity received → name=AndyC, mode=keyboard, raceFlag=0
-[07:00:54.296] [Log] [GateTrigger] Gate 0 passed by Robot
-[07:00:57.114] [Log] [RobotStatus] Robot has fallen off the track!
-[07:00:57.114] [Log] [RaceManager] Force finish triggered.
-[07:00:57.117] [Log] [GameManager] Race Ended. Preparing to send data after 100ms delay...
-[07:00:57.118] [Log] [WebSocketClient] StopReceivingCommands(): torque updates will be ignored.
-[07:00:57.120] [Warning] [GameManager] No finisher found.
-[07:00:57.121] [Log] [GameManager] Race Ended. Triggering game shutdown...
-[07:00:57.225] [Log] [WebSocketClient] Waiting briefly before sending race data...
-[07:00:57.333] [Log] [WebSocketClient] Race Data JSON sent successfully.
-[07:00:57.422] [Log] [WebSocketClient] Connection closed.
-[07:00:58.841] [Log] [GameManager] Quitting application...
+[Logger Initialized at 2025/11/08 10:44:07][10:44:07.238] [Log] [FileLogger] Logging to: C:\AARACE\GitProjects\virtual-robot-race\Project_Beta\Windows\runtime_log.txt
+[10:44:07.762] [Log] [WebSocketClient] Subscribed to Tick (20fps).
+[10:44:07.762] [Log] [PlayerCameraRGB] Initialized & subscribed to Tick (20fps).
+[10:44:07.762] [Log] [DataLogger] Initialized & subscribed to Tick.
+[10:44:07.763] [Log] [GameManager] Game Started.TickScheduler initialized (20fps)
+[10:44:07.764] [Log] [WebSocketClient] Start() begin.
+[10:44:07.772] [Log] [WebSocketClient] Connecting...
+[10:44:07.802] [Log] [RaceManager] Start sequence begun.
+[10:44:07.896] [Log] [WebSocketClient] Connected to server.
+[10:44:07.917] [Log] [WebSocketClient] Identity received → name=AndyC, mode=ai, raceFlag=0
+[10:44:09.187] [Log] [RobotStatus] RobotRoot committed a FALSE START!
+[10:44:09.187] [Log] [RaceManager] Force finish triggered.
+[10:44:09.189] [Log] [DataLogger] Finalized last row as 'Finish' (overwrite, no append).
+[10:44:09.193] [Warning] [GameManager] No finisher found.
+[10:44:09.193] [Log] [GameManager] Race Ended. Triggering game shutdown...
+[10:44:09.400] [Log] [WebSocketClient] Race Data JSON sent successfully.
+[10:44:09.429] [Log] [WebSocketClient] Connection closed.
+[10:44:09.903] [Log] [WebSocketClient] Connection closed.
+[10:44:10.709] [Log] [GameManager] Quitting application...
+[10:44:10.715] [Log] [WebSocketClient] Connection closed.
