@@ -1,4 +1,4 @@
-# keyboard_input.py (Robot1 version)
+# keyboard_input.py (Robot2 version)
 # Allows manual control of drive torque and steering angle using keyboard keys
 
 import threading

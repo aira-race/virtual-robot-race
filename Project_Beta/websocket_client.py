@@ -1,6 +1,6 @@
 # websocket_client.py
-# Python側をWebSocketクライアントに変更
-# Unityサーバーに接続して、制御コマンドを受信、テレメトリーを送信
+# WebSocket client implementation for Python side
+# Connects to Unity server, receives control commands, and sends telemetry
 
 import asyncio
 import json
@@ -11,14 +11,15 @@ import data_manager
 class RobotWebSocketClient:
     """WebSocket client for connecting to Unity server"""
 
-    def __init__(self, robot_id: str = "R1", server_url: str = "ws://localhost:12346/robot", robot_config: dict = None):
+    def __init__(self, robot_id: str = "R1", server_url: str = "ws://localhost:12346/robot", robot_config: dict = None, active_robots: list = None):
         self.robot_id = robot_id
         self.server_url = server_url
         self.websocket = None
         self.running = False
         self.robot_config = robot_config or {}
+        self.active_robots = active_robots  # List of active robot numbers [1, 2, ...]
 
-        # 制御コマンド（最新値）
+        # Control commands (latest values)
         self.drive_torque = 0.0
         self.steer_angle = 0.0
 
@@ -38,7 +39,7 @@ class RobotWebSocketClient:
             self.running = True
             print(f"[{self.robot_id}] Connected to Unity server at {self.server_url}")
 
-            # ハンドシェイク送信
+            # Send handshake
             await self.send_handshake()
 
         except Exception as e:
@@ -50,10 +51,26 @@ class RobotWebSocketClient:
         handshake = {
             "type": "connection",
             "robot_id": self.robot_id,
-            "message": "Hello from Python client"
+            "message": "Hello from Python client",
+            # Robot identity (for race results posting)
+            "player_name": self.robot_config.get("NAME", "Player0000"),
+            "mode": self._get_mode_string(),
+            "race_flag": self.robot_config.get("RACE_FLAG", 0)
         }
+
+        # Include active_robots list (only if provided)
+        if self.active_robots is not None:
+            handshake["active_robots"] = self.active_robots
+            print(f"[{self.robot_id}] Sending active_robots: {self.active_robots}")
+
         await self.send_json(handshake)
         print(f"[{self.robot_id}] Handshake sent")
+
+    def _get_mode_string(self) -> str:
+        """Convert MODE_NUM to mode string"""
+        mode_num = self.robot_config.get("MODE_NUM", 1)
+        mode_map = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai"}
+        return mode_map.get(mode_num, "keyboard")
 
     async def send_json(self, data: dict):
         """Send JSON message to server"""
@@ -108,19 +125,19 @@ class RobotWebSocketClient:
             msg_type = data.get("type", "")
 
             if msg_type == "control":
-                # 制御コマンド受信
+                # Receive control command
                 self.drive_torque = data.get("driveTorque", 0.0)
                 self.steer_angle = data.get("steerAngle", 0.0)
                 print(f"[{self.robot_id}] Control received: drive={self.drive_torque:.3f}, steer={self.steer_angle:.3f}")
 
             elif msg_type == "connection":
-                # 接続確認
+                # Connection confirmation
                 status = data.get("status", "")
                 message = data.get("message", "")
                 print(f"[{self.robot_id}] Server response: {status} - {message}")
 
             elif msg_type == "metadata":
-                # レース終了時のメタデータ受信
+                # Receive metadata at race end
                 print(f"[{self.robot_id}] Metadata received from Unity")
                 await self.save_metadata(data)
 
@@ -232,7 +249,7 @@ class RobotWebSocketClient:
                 pass
 
 
-# ===== テスト用メイン関数 =====
+# ===== Test main function =====
 async def main():
     """Test client connection"""
     client = RobotWebSocketClient(robot_id="R1", server_url="ws://localhost:12346/robot")
@@ -240,10 +257,10 @@ async def main():
     try:
         await client.connect()
 
-        # 受信ループを起動
+        # Start receive loop
         receive_task = asyncio.create_task(client.receive_loop())
 
-        # テスト: 5秒間待機してテレメトリーを送信
+        # Test: Wait 5 seconds and send telemetry
         for i in range(5):
             await asyncio.sleep(1)
             await client.send_telemetry(
@@ -254,7 +271,7 @@ async def main():
             )
             print(f"[R1] Telemetry sent: tick={i}")
 
-        # 受信ループを終了
+        # Stop receive loop
         await client.close()
         await receive_task
 

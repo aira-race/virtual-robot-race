@@ -1,11 +1,11 @@
 # main.py
-# 新アーキテクチャ版（Unity=Server、Python=Client）
+# New architecture version (Unity=Server, Python=Client)
 # Entry point that orchestrates:
 #  - Unity process launch (WebSocket Server)
 #  - RobotWebSocketClient (Python Client)
 #  - Input pipeline (keyboard / table / rule_based / AI)
 #  - Post-race video build (MP4)
-# Robot1対応版: Robot1/robot_config.txt から設定を読み込み、Robot1/ 配下のモジュールを使用
+# Multi-robot support: Loads settings from Robot{N}/robot_config.txt and uses Robot{N}/ modules
 
 import asyncio
 import threading
@@ -76,7 +76,13 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
         print("[Main] AUTO_MAKE_VIDEO=0 → Skip video pipeline.")
         return
 
-    run_dir = read_last_run_dir()
+    # Check if JPEG_SAVE is enabled
+    if not robot_config.get("JPEG_SAVE", 1):
+        print("[Main] WARNING: AUTO_MAKE_VIDEO=1 but JPEG_SAVE=0. Cannot create video without saved images. Skipping video pipeline.")
+        return
+
+    robot_id = robot_config.get("ROBOT_ID", "R1")
+    run_dir = read_last_run_dir(robot_id)
     if not run_dir:
         print("[Main] Post-race video pipeline skipped: last_run_dir not found.")
         return
@@ -394,17 +400,18 @@ async def main() -> None:
         robot_modes = {}  # Store mode and config for each robot
 
         # Phase 1: Connect all robots
-        for robot_num in config.ACTIVE_ROBOTS:
+        for i, robot_num in enumerate(config.ACTIVE_ROBOTS):
             rc = robot_configs[robot_num]
             robot_id = rc.get("ROBOT_ID", f"R{robot_num}")
             mode_num = rc.get("MODE_NUM", 1)
             mode = config.get_mode_string(mode_num)
 
-            # Create client
+            # Create client (only first robot sends active_robots info)
             client = RobotWebSocketClient(
                 robot_id=robot_id,
                 server_url=server_url,
-                robot_config=rc
+                robot_config=rc,
+                active_robots=config.ACTIVE_ROBOTS if i == 0 else None  # First robot sends the list
             )
             robot_clients[robot_id] = client
             robot_modes[robot_id] = (mode, robot_num, rc)  # Store config too

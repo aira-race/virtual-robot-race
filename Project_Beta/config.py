@@ -11,7 +11,7 @@ CONFIG_PATH = "config.txt"
 DEFAULT_CONFIG = {
     "HOST": "localhost",
     "PORT": 12346,
-    "ACTIVE_ROBOTS": "1",   # アクティブなロボット (カンマ区切り)
+    "ACTIVE_ROBOTS": "1",   # Active robots (comma-separated)
     "DEBUG_MODE": 0,        # 0: Launch Unity automatically, 1: Launch manually (debug)
 }
 
@@ -146,7 +146,7 @@ def apply_config():
     PORT = CONFIG["PORT"]
     DEBUG_MODE = CONFIG["DEBUG_MODE"]
 
-    # アクティブロボットのリストを解析
+    # Parse active robots list
     ACTIVE_ROBOTS = [int(r.strip()) for r in CONFIG.get("ACTIVE_ROBOTS", "1").split(",")]
 
     # Load all robot configs

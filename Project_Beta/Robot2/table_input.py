@@ -1,4 +1,4 @@
-# table_input.py (Robot1 version - New Architecture)
+# table_input.py (Robot2 version - New Architecture)
 # Reads drive/steer commands from CSV file and provides them for WebSocket sending
 # Compatible with Unity Server + Python Client architecture
 

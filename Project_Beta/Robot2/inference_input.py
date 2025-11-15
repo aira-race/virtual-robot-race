@@ -1,4 +1,4 @@
-# inference_input.py (Robot1 version - New Architecture)
+# inference_input.py (Robot2 version - New Architecture)
 # AI inference using a trained PyTorch model to predict drive/steer from RGB image + SOC
 # Compatible with Unity Server + Python Client architecture
 # Updated for steer-type control (driveTorque, steerAngle)

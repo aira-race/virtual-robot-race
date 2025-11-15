@@ -1,26 +1,34 @@
-# Robot1 Configuration
-# ロボット個別の設定ファイル
+# Robot1 Configuration File
+# Robot-specific settings for the first robot
 
-# 制御モード (1: keyboard, 2: table, 3: rule_based, 4: ai)
-MODE_NUM=4
+# Control mode:
+# 1 = keyboard
+# 2 = table (CSV playback)
+# 3 = rule_based (autonomous lane following)
+# 4 = ai (neural network inference)
+MODE_NUM=1
 
-# ロボットID (自動設定されるが、明示的に指定も可能)
+# Robot identifier (used for WebSocket communication)
 ROBOT_ID=R1
 
-# プレイヤー名 (最大10文字の英数字)
-NAME=Player0001
+# Player name (up to 10 alphanumeric characters, used for leaderboard)
+NAME=Player1234
 
-# レース参加フラグ (1: 参加してPOST, 0: 観戦のみ)
-RACE_FLAG=0
+# Race participation flag:
+# 1 = Participate in race (results will be posted)
+# 0 = Watch only (no results posted)
+RACE_FLAG=1
 
-# 画像保存 (1: 保存する, 0: 保存しない)
+# Image saving:
+# 1 = Save JPEG images during run
+# 0 = Do not save images (faster, less disk usage)
 JPEG_SAVE=1
 
-# ビデオ自動生成 (1: 有効, 0: 無効)
+# Automatic video creation after race:
+# 1 = Auto-create MP4 video from images
+# 0 = Skip video creation
 AUTO_MAKE_VIDEO=0
 
-# ビデオFPS
+# Video settings (only used if AUTO_MAKE_VIDEO=1)
 VIDEO_FPS=20
-
-# FPS自動推測 (1: 有効, 0: 無効)
 INFER_FPS=1

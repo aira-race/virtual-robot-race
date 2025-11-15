@@ -243,7 +243,7 @@ class DataManager:
         meta_csv = self.current_run_dir / "metadata.csv"
         with open(meta_csv, "w", newline="", encoding="utf-8") as fp:
             w = csv.writer(fp)
-            # === ヘッダ ===
+            # === Header ===
             w.writerow([
                 "tick", "session_time_ms", "race_time_ms", "filename", "soc",
                 "drive_torque", "steer_angle",
@@ -252,7 +252,7 @@ class DataManager:
                 "yaw_deg", "error_code"
             ])
 
-            # 欠損を安全に変換するヘルパー
+            # Helper to safely convert missing values
             def f_or_0(v):
                 try:
                     if v is None or v == "" or str(v).lower() == "nan":
@@ -267,13 +267,13 @@ class DataManager:
                 except (TypeError, ValueError):
                     return 0
 
-            # === データ書き込み ===
+            # === Write data ===
             if isinstance(rows, list):
                 for r in rows:
                     if not isinstance(r, dict):
                         continue
 
-                    # 数値系の安全取得
+                    # Safe retrieval of numeric values
                     tick         = i_or_0(r.get("tick"))
                     session_ms   = i_or_0(r.get("session_time_ms"))
                     race_ms      = i_or_0(r.get("race_time_ms"))
@@ -288,7 +288,7 @@ class DataManager:
                     yaw          = f_or_0(r.get("yaw_deg") or r.get("yaw"))
                     err          = i_or_0(r.get("error_code"))
 
-                    # 行出力
+                    # Write row
                     w.writerow([
                         tick,
                         session_ms,
