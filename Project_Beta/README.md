@@ -319,7 +319,7 @@ Please share your test results with us via Discord or GitHub Issues. 😊
 
 ## 😊 Community & Support
 
-* Discord: [https://discord.gg/BCTd2ctq](https://discord.gg/BCTd2ctq)
+* YouTube: https://www.youtube.com/@AAgrand_prix
 * Official Website: [https://virtualrobotrace.com](https://virtualrobotrace.com)
 * GitHub Issues: [https://github.com/AAgrandprix/virtual-robot-race/issues](https://github.com/AAgrandprix/virtual-robot-race/issues)
 
