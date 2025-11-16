@@ -15,7 +15,7 @@ ACTIVE_ROBOTS=1,2
 
 # Per-robot settings are managed in Robot1/robot_config.txt, Robot2/robot_config.txt, etc.
 
-# Unity launch mode:
-# 0 = Launch Unity automatically from Unity_Build.exe
-# 1 = Launch Unity manually (useful for debugging)
+# Unity launch mode (advanced setting):
+# 0 = Auto-launch Unity (recommended)
+# 1 = Manual launch (for debugging)
 DEBUG_MODE=0
