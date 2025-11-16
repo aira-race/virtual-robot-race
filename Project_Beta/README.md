@@ -137,6 +137,14 @@ Project_Beta/
 │   │   ├── Linetrace_white.py
 │   │   ├── perception_Lane.py
 │   │   └── ...
+│   ├── data_interactive/    # Real-time data (auto-generated, gitignored)
+│   │   ├── last_run_dir.txt       # Path to most recent run
+│   │   ├── latest_RGB_a.jpg       # Current camera frame (buffer A)
+│   │   ├── latest_RGB_b.jpg       # Current camera frame (buffer B)
+│   │   ├── latest_RGB_now.txt     # Active buffer indicator (a or b)
+│   │   ├── latest_frame_name.txt  # Current frame filename
+│   │   ├── latest_SOC.txt         # Current battery state of charge
+│   │   └── latest_torque.txt      # Current drive torque value
 │   └── training_data/       # Recorded runs
 │       └── run_YYYYMMDD_HHMMSS/
 │           ├── images/
