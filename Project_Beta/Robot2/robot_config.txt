@@ -29,6 +29,6 @@ DATA_SAVE=0
 # 0 = Skip video creation
 AUTO_MAKE_VIDEO=0
 
-# Video settings (only used if AUTO_MAKE_VIDEO=1)
+# Advanced video settings (usually no need to change)
 VIDEO_FPS=20
 INFER_FPS=1
