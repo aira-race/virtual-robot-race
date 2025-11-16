@@ -230,6 +230,43 @@ AI-powered control using trained PyTorch models.
 
 ---
 
+## 📊 Data Recording (DATA_SAVE=1)
+
+When `DATA_SAVE=1` is enabled, race data is automatically saved to the `training_data` folder.
+
+### Folder Structure
+```
+Robot1/training_data/
+└── run_YYYYMMDD_HHMMSS/
+    ├── images/              # Camera RGB images (JPEG)
+    └── metadata.csv         # Telemetry data
+```
+
+### metadata.csv Columns
+
+| Column | Description |
+|--------|-------------|
+| `id` | Tick ID for system tracking (1 tick = 50ms) |
+| `session_time` | Game system internal timer |
+| `race_time` | Time elapsed since start signal turned GO |
+| `filename` | Image filename linked to this tick (for training) |
+| `soc` | Robot battery State of Charge (%) |
+| `drive_torque` | Drive torque command value sent to robot |
+| `steer` | Steering angle command value (radians) |
+| `status` | Race status: `start` (before GO), `lap0`/`lap1` (racing), `finish` |
+| `pos_z` | Position in forward direction (meters) |
+| `pos_x` | Position in lateral direction (meters) |
+| `yaw` | Heading angle: 0° at start, positive=right, negative=left (degrees) |
+| `pos_y` | Position in vertical direction (meters) |
+| `error_code` | Error code (currently dummy value: 999) |
+
+### Usage
+- **AI Training**: Use `images/` and `metadata.csv` to train neural network models
+- **Analysis**: Review driving behavior and optimize control algorithms
+- **Replay**: Use metadata for table playback mode (MODE_NUM=2)
+
+---
+
 ## 🏁 Racing Scenarios
 
 ### Solo Practice
