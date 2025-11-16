@@ -214,6 +214,7 @@ Manually drive your robot with the keyboard:
 - **Z**: Brake/Reverse
 - **J**: Steer left
 - **L**: Steer right
+- **I** or **M**: Steer center (neutral)
 
 ### 2. Table Playback (MODE_NUM=2)
 Replay pre-recorded control data from CSV files.
