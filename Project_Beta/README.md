@@ -141,6 +141,7 @@ Project_Beta/
 │       └── run_YYYYMMDD_HHMMSS/
 │           ├── images/
 │           ├── metadata.csv
+│           ├── unity_log.txt   # Unity debug log (auto-generated)
 │           └── output_video.mp4
 │
 ├── Robot2/                  # Second robot configuration
@@ -239,7 +240,8 @@ When `DATA_SAVE=1` is enabled, race data is automatically saved to the `training
 Robot1/training_data/
 └── run_YYYYMMDD_HHMMSS/
     ├── images/              # Camera RGB images (JPEG)
-    └── metadata.csv         # Telemetry data
+    ├── metadata.csv         # Telemetry data
+    └── unity_log.txt   　   # Unity debug log (auto-generated)
 ```
 
 ### metadata.csv Columns

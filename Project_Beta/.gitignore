@@ -32,3 +32,4 @@ Robot*/data_interactive/
 *.log
 nul
 Windows/runtime_log.txt
+unity_log.txt
