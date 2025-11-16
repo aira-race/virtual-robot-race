@@ -76,9 +76,9 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
         print("[Main] AUTO_MAKE_VIDEO=0 → Skip video pipeline.")
         return
 
-    # Check if JPEG_SAVE is enabled
-    if not robot_config.get("JPEG_SAVE", 1):
-        print("[Main] WARNING: AUTO_MAKE_VIDEO=1 but JPEG_SAVE=0. Cannot create video without saved images. Skipping video pipeline.")
+    # Check if DATA_SAVE is enabled
+    if not robot_config.get("DATA_SAVE", 1):
+        print("[Main] WARNING: AUTO_MAKE_VIDEO=1 but DATA_SAVE=0. Cannot create video without saved images. Skipping video pipeline.")
         return
 
     robot_id = robot_config.get("ROBOT_ID", "R1")
@@ -118,7 +118,7 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
     except Exception as e:
         print(f"[Main] Failed to open file manager: {e}")
 
-    if robot_config.get("JPEG_SAVE", 1) == 0:
+    if robot_config.get("DATA_SAVE", 1) == 0:
         try:
             if images_dir.exists():
                 count = 0
@@ -128,7 +128,7 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
                         count += 1
                     except Exception as e:
                         print(f"[Main] Failed to delete {p.name}: {e}")
-                print(f"[Main] JPEG_SAVE=0 → Deleted {count} JPG files after video export.")
+                print(f"[Main] DATA_SAVE=0 → Deleted {count} JPG files after video export.")
         except Exception as e:
             print(f"[Main] Cleanup after video failed: {e}")
 

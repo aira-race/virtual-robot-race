@@ -21,7 +21,7 @@ DEFAULT_ROBOT_CONFIG = {
     "ROBOT_ID": "R1",       # Robot ID (e.g., R1, R2, ...)
     "NAME": "Player0000",   # Player name (up to 10 alphanumeric chars)
     "RACE_FLAG": 1,         # 1: participate (POST), 0: watch only
-    "JPEG_SAVE": 1,         # 1: Save images, 0: Do not save
+    "DATA_SAVE": 1,         # 1: Save images, 0: Do not save
     "AUTO_MAKE_VIDEO": 1,   # 1=auto make mp4 after run
     "VIDEO_FPS": 20,        # default video fps
     "INFER_FPS": 1,         # 1=estimate fps from timestamps
@@ -32,7 +32,7 @@ INT_KEYS = {
     "PORT",
     "MODE_NUM",
     "DEBUG_MODE",
-    "JPEG_SAVE",
+    "DATA_SAVE",
     "RACE_FLAG",
     "AUTO_MAKE_VIDEO",
     "VIDEO_FPS",

@@ -184,7 +184,7 @@ NAME=Player1234      # Up to 10 alphanumeric characters
 RACE_FLAG=1          # 1=Post results to leaderboard, 0=Practice only
 
 # Recording settings
-JPEG_SAVE=1          # 1=Save images, 0=Don't save
+DATA_SAVE=1          # 1=Save CSV and images, 0=Don't save
 AUTO_MAKE_VIDEO=0    # 1=Auto-create video after race
 
 # Video settings

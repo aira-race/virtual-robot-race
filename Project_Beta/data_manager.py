@@ -341,8 +341,8 @@ class DataManager:
         if self.images_dir is None:
             return
         try:
-            if getattr(config, "JPEG_SAVE", 1) == 0:
-                print("[DataManager] JPEG_SAVE=0 → deleting saved images...")
+            if getattr(config, "DATA_SAVE", 1) == 0:
+                print("[DataManager] DATA_SAVE=0 → deleting saved images...")
                 for p in self.images_dir.glob("*.jpg"):
                     p.unlink(missing_ok=True)
         except Exception as e:

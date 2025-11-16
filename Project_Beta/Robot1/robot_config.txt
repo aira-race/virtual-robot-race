@@ -1,6 +1,13 @@
 # Robot1 Configuration File
 # Robot-specific settings for the first robot
 
+# Robot identifier (used for WebSocket communication)
+# User do not need change
+ROBOT_ID=R1
+
+# Player name (up to 10 alphanumeric characters, used for leaderboard)
+NAME=Player0000
+
 # Control mode:
 # 1 = keyboard
 # 2 = table (CSV playback)
@@ -8,26 +15,21 @@
 # 4 = ai (neural network inference)
 MODE_NUM=1
 
-# Robot identifier (used for WebSocket communication)
-ROBOT_ID=R1
-
-# Player name (up to 10 alphanumeric characters, used for leaderboard)
-NAME=Player1234
 
 # Race participation flag:
 # 1 = Participate in race (results will be posted)
-# 0 = Watch only (no results posted)
+# 0 = Test Run only (no results posted)
 RACE_FLAG=0
 
-# Image saving:
-# 1 = Save JPEG images during run
-# 0 = Do not save images (faster, less disk usage)
-JPEG_SAVE=1
+# Data saving:
+# 1 = Save CSV and JPEG images during run
+# 0 = Do not save data (faster, less disk usage)
+DATA_SAVE=0
 
 # Automatic video creation after race:
 # 1 = Auto-create MP4 video from images
 # 0 = Skip video creation
-AUTO_MAKE_VIDEO=2
+AUTO_MAKE_VIDEO=0
 
 # Video settings (only used if AUTO_MAKE_VIDEO=1)
 VIDEO_FPS=20

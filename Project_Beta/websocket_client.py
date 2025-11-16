@@ -23,9 +23,9 @@ class RobotWebSocketClient:
         self.drive_torque = 0.0
         self.steer_angle = 0.0
 
-        # DataManager for saving images (if JPEG_SAVE=1)
+        # DataManager for saving images (if DATA_SAVE=1)
         self.data_manager = None
-        if self.robot_config.get('JPEG_SAVE', 0) == 1:
+        if self.robot_config.get('DATA_SAVE', 0) == 1:
             from pathlib import Path
             base_dir = Path(__file__).parent
             self.data_manager = data_manager.DataManager(base_dir, robot_id=robot_id)
@@ -178,7 +178,7 @@ class RobotWebSocketClient:
             frame_name = f"frame_{self._image_count:06d}.jpg"
             frame_name_file.write_text(frame_name, encoding="utf-8")
 
-            # Save to training_data if JPEG_SAVE=1
+            # Save to training_data if DATA_SAVE=1
             if self.data_manager is not None:
                 image_path = self.data_manager.images_dir / frame_name
                 self.data_manager.save_image_bytes(image_path, message)
