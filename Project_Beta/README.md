@@ -121,18 +121,21 @@ Project_Beta/
 ├── setup_env.bat            # Quick setup script
 ├── data_manager.py          # Training data manager
 ├── make_video.py            # Video creation utility
-├── train_model.py           # AI model training
 │
 ├── Robot1/                  # First robot configuration
 │   ├── robot_config.txt     # Robot1 settings (mode, name, race flag)
-│   ├── keyboard_input.py    # Manual control
-│   ├── table_input.py       # CSV playback
+│   ├── keyboard_input.py    # Manual control (MODE_NUM=1)
+│   ├── table_input.py       # CSV playback (MODE_NUM=2)
 │   ├── table_input.csv      # Recorded control data
-│   ├── rule_based_input.py  # Rule-based Control input
+│   ├── rule_based_input.py  # Rule-based control (MODE_NUM=3)
+│   ├── inference_input.py   # AI inference engine (MODE_NUM=4)
+│   ├── ai_control_strategy.py  # AI strategy settings (hybrid/pure_e2e)
+│   ├── model.py             # Neural network model definition
+│   ├── train_model.py       # Model training script
 │   ├── rule_based_algorithms/
 │   │   ├── driver_model.py
-│   │   ├── Linetrace_white.py
 │   │   ├── perception_Lane.py
+│   │   ├── perception_Startsignal.py
 │   │   └── ...
 │   ├── data_interactive/    # Real-time data (auto-generated, gitignored)
 │   │   ├── last_run_dir.txt       # Path to most recent run
@@ -142,10 +145,9 @@ Project_Beta/
 │   │   ├── latest_frame_name.txt  # Current frame filename
 │   │   ├── latest_SOC.txt         # Current battery state of charge
 │   │   └── latest_torque.txt      # Current drive torque value
-│   ├── inference_input.py   # Neural network AI
 │   ├── models/
 │   │   └── model.pth        # AI model (download separately)
-│   └── training_data/       # Recorded runs
+│   └── training_data/       # Recorded runs for AI training
 │       └── run_YYYYMMDD_HHMMSS/
 │           ├── images/
 │           ├── metadata.csv
@@ -156,7 +158,7 @@ Project_Beta/
 │   └── (same structure as Robot1)
 │
 └── Windows/                 # Unity executable
-    ├── Unity_Build.exe
+    ├── VirtualRobotRace_Beta.exe
     └── ...
 ```
 
