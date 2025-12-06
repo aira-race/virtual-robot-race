@@ -16,7 +16,7 @@ import time
 from typing import Optional
 from pathlib import Path
 
-import config
+import config_loader
 from websocket_client import RobotWebSocketClient
 
 # Lazy-import only when used
@@ -354,17 +354,17 @@ async def main() -> None:
     global robot_clients
 
     print("[Main] Starting new architecture (Unity=Server, Python=Client)...")
-    print(f"[Main] Active robots: {config.ACTIVE_ROBOTS}")
+    print(f"[Main] Active robots: {config_loader.ACTIVE_ROBOTS}")
 
     # 1) Load all active robot configs
     robot_configs = {}
     keyboard_robot = None  # Track which robot gets keyboard control
 
-    for robot_num in config.ACTIVE_ROBOTS:
-        robot_configs[robot_num] = config.get_robot_config(robot_num)
+    for robot_num in config_loader.ACTIVE_ROBOTS:
+        robot_configs[robot_num] = config_loader.get_robot_config(robot_num)
         rc = robot_configs[robot_num]
         mode_num = rc.get('MODE_NUM', 1)
-        mode_str = config.get_mode_string(mode_num)
+        mode_str = config_loader.get_mode_string(mode_num)
 
         print(f"[Main] Robot{robot_num} config loaded:")
         print(f"  - ROBOT_ID: {rc.get('ROBOT_ID')}")
@@ -387,7 +387,7 @@ async def main() -> None:
 
     try:
         # 2) Launch Unity
-        if config.DEBUG_MODE == 0:
+        if config_loader.DEBUG_MODE == 0:
             unity_proc = launch_unity_exe()
             if not unity_proc:
                 print("[Main] Failed to launch Unity. Exiting.")
@@ -396,7 +396,7 @@ async def main() -> None:
             print("[Main] DEBUG_MODE = 1 → Please launch Unity manually.")
 
         # 3) Wait for Unity server to be ready
-        server_url = f"ws://{config.HOST}:{config.PORT}/robot"
+        server_url = f"ws://{config_loader.HOST}:{config_loader.PORT}/robot"
         if not await wait_for_unity_server(server_url, timeout=30.0):
             print("[Main] Unity server did not start. Exiting.")
             return
@@ -406,18 +406,18 @@ async def main() -> None:
         robot_modes = {}  # Store mode and config for each robot
 
         # Phase 1: Connect all robots
-        for i, robot_num in enumerate(config.ACTIVE_ROBOTS):
+        for i, robot_num in enumerate(config_loader.ACTIVE_ROBOTS):
             rc = robot_configs[robot_num]
             robot_id = rc.get("ROBOT_ID", f"R{robot_num}")
             mode_num = rc.get("MODE_NUM", 1)
-            mode = config.get_mode_string(mode_num)
+            mode = config_loader.get_mode_string(mode_num)
 
             # Create client (only first robot sends active_robots info)
             client = RobotWebSocketClient(
                 robot_id=robot_id,
                 server_url=server_url,
                 robot_config=rc,
-                active_robots=config.ACTIVE_ROBOTS if i == 0 else None  # First robot sends the list
+                active_robots=config_loader.ACTIVE_ROBOTS if i == 0 else None  # First robot sends the list
             )
             robot_clients[robot_id] = client
             robot_modes[robot_id] = (mode, robot_num, rc)  # Store config too
@@ -483,7 +483,7 @@ async def main() -> None:
             print(f"[Main] {robot_id} closed")
 
         # 8) Post-race: build videos for each robot
-        for robot_num in config.ACTIVE_ROBOTS:
+        for robot_num in config_loader.ACTIVE_ROBOTS:
             rc = robot_configs[robot_num]
             try:
                 await build_video_and_open_explorer(rc)

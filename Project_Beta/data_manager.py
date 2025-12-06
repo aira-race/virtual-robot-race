@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
-import config
+import config_loader
 
 # -------------------------
 # Base directory resolution
@@ -328,20 +328,20 @@ class DataManager:
             except Exception as e:
                 print(f"[DataManager] Failed to copy Unity log: {e}")
 
-        if config.MODE == "table":
-            table_src = self.base_dir / "table_input.csv"
-            if table_src.exists():
-                dst = self.current_run_dir / "table_input.csv"
-                try:
-                    shutil.copy(table_src, dst)
-                except Exception as e:
-                    print(f"[DataManager] Failed to copy table_input.csv: {e}")
+        # Copy table_input.csv if it exists (for table mode runs)
+        table_src = self.base_dir / "table_input.csv"
+        if table_src.exists():
+            dst = self.current_run_dir / "table_input.csv"
+            try:
+                shutil.copy(table_src, dst)
+            except Exception as e:
+                print(f"[DataManager] Failed to copy table_input.csv: {e}")
 
     def _maybe_delete_images_if_flagged(self) -> None:
         if self.images_dir is None:
             return
         try:
-            if getattr(config, "DATA_SAVE", 1) == 0:
+            if getattr(config_loader, "DATA_SAVE", 1) == 0:
                 print("[DataManager] DATA_SAVE=0 → deleting saved images...")
                 for p in self.images_dir.glob("*.jpg"):
                     p.unlink(missing_ok=True)
