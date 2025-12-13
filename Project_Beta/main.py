@@ -18,6 +18,49 @@ from pathlib import Path
 
 import config_loader
 from websocket_client import RobotWebSocketClient
+import data_manager as dm
+
+
+# -------------------------
+# Terminal Log Capture
+# -------------------------
+class LogCapture:
+    """Captures stdout/stderr while still printing to terminal."""
+    def __init__(self, original_stream):
+        self.logs = []
+        self.original = original_stream
+
+    def write(self, text):
+        if text:
+            self.logs.append(text)
+            self.original.write(text)
+
+    def flush(self):
+        self.original.flush()
+
+    def get_log_text(self) -> str:
+        return "".join(self.logs)
+
+
+# Install log capture at module load time
+_stdout_capture = LogCapture(sys.stdout)
+_stderr_capture = LogCapture(sys.stderr)
+sys.stdout = _stdout_capture
+sys.stderr = _stderr_capture
+
+
+def get_terminal_log() -> str:
+    """Get all captured terminal output."""
+    # Combine stdout and stderr logs
+    stdout_log = _stdout_capture.get_log_text()
+    stderr_log = _stderr_capture.get_log_text()
+    if stderr_log:
+        return stdout_log + "\n=== STDERR ===\n" + stderr_log
+    return stdout_log
+
+
+# Register the terminal log getter with data_manager
+dm.register_terminal_log_getter(get_terminal_log)
 
 # Lazy-import only when used
 import make_video
@@ -198,20 +241,27 @@ async def run_control_module(client: RobotWebSocketClient, mode: str, robot_num:
             keyboard_input.stop_listener()
 
         elif mode == "ai":
-            # Load inference_input from Robot{N}/ directory explicitly
-            module_file = robot_dir / "inference_input.py"
-            try:
-                spec = importlib.util.spec_from_file_location(
-                    f"Robot{robot_num}.inference_input",
-                    module_file
-                )
-                inference_input = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(inference_input)
-            except Exception as e:
-                print(f"[Main] Failed to load inference_input: {e}")
-                import traceback
-                traceback.print_exc()
-                return
+            # Use preloaded inference module if available, otherwise load fresh
+            inference_input = robot_config.get('_preloaded_inference_module')
+            if inference_input is None:
+                # Fallback: Load inference_input from Robot{N}/ directory explicitly
+                module_file = robot_dir / "inference_input.py"
+                try:
+                    spec = importlib.util.spec_from_file_location(
+                        f"Robot{robot_num}.inference_input",
+                        module_file
+                    )
+                    inference_input = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(inference_input)
+                    # Preload model if not already done
+                    inference_input.preload_model()
+                except Exception as e:
+                    print(f"[Main] Failed to load inference_input: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    return
+            else:
+                print(f"[Main] Using preloaded inference module for Robot{robot_num}")
 
             # AI mode: Poll AI inference and send to Unity
             print("[Main] AI mode: Autonomous driving with neural network")
@@ -426,7 +476,33 @@ async def main() -> None:
             await client.connect()
             print(f"[Main] Robot{robot_num} ({robot_id}) connected")
 
-        print(f"[Main] All {len(robot_clients)} robots connected. Starting control modules simultaneously...")
+        print(f"[Main] All {len(robot_clients)} robots connected.")
+
+        # Phase 1.5: Preload AI models BEFORE starting control loops
+        # This prevents model loading delays during the start signal sequence
+        import importlib.util  # Import here for Phase 1.5
+        print("[Main] Preloading AI models for all AI-mode robots...")
+        for robot_id, (mode, robot_num, rc) in robot_modes.items():
+            if mode == "ai":
+                robot_dir = Path(f"Robot{robot_num}")
+                module_file = robot_dir / "inference_input.py"
+                try:
+                    spec = importlib.util.spec_from_file_location(
+                        f"Robot{robot_num}.inference_input_preload",
+                        module_file
+                    )
+                    inference_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(inference_module)
+                    inference_module.preload_model()
+                    # Store the preloaded module for later use
+                    rc['_preloaded_inference_module'] = inference_module
+                except Exception as e:
+                    print(f"[Main] WARNING: Failed to preload model for Robot{robot_num}: {e}")
+                    import traceback
+                    traceback.print_exc()
+        print("[Main] AI model preloading complete.")
+
+        print("[Main] Starting control modules simultaneously...")
 
         # Phase 2: Start all control modules and receive loops simultaneously
         for robot_id, client in robot_clients.items():

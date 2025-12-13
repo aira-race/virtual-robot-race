@@ -18,4 +18,4 @@ ACTIVE_ROBOTS=1,2
 # Unity launch mode (advanced setting):
 # 0 = Auto-launch Unity (recommended)
 # 1 = Manual launch (for debugging)
-DEBUG_MODE=0
+DEBUG_MODE=1

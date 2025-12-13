@@ -2,7 +2,7 @@
 # Data manager for AAGP streaming protocol (driveTorque / steerAngle unified)
 # - Saves per-tick images (JPG)
 # - Appends frames_map.csv (tick, driveTorque, steerAngle, SOC, status)
-# - On race end, writes metadata.csv from Unity’s DataLogger output
+# - On race end, writes metadata.csv from Unity's DataLogger output
 # - No wheel_left/right columns anymore
 
 import os
@@ -12,9 +12,21 @@ import time
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 import config_loader
+
+# -------------------------
+# Terminal log getter (set by main.py)
+# -------------------------
+_terminal_log_getter: Optional[Callable[[], str]] = None
+
+
+def register_terminal_log_getter(getter_func: Callable[[], str]) -> None:
+    """Register a function to get terminal log text."""
+    global _terminal_log_getter
+    _terminal_log_getter = getter_func
+    print("[DataManager] Terminal log getter registered")
 
 # -------------------------
 # Base directory resolution
@@ -347,3 +359,28 @@ class DataManager:
                     p.unlink(missing_ok=True)
         except Exception as e:
             print(f"[DataManager] Cleanup failed: {e}")
+
+    # -------------------------
+    # Terminal log saving
+    # -------------------------
+    def save_terminal_log_from_main(self) -> None:
+        """Save terminal output from main.py to terminal_log.txt in the run directory."""
+        if self.current_run_dir is None:
+            print("[DataManager] Cannot save terminal log: no run directory.")
+            return
+
+        if _terminal_log_getter is None:
+            print(f"[DataManager] [{self.robot_id}] Terminal log getter not registered")
+            return
+
+        try:
+            log_text = _terminal_log_getter()
+            if not log_text:
+                print(f"[DataManager] [{self.robot_id}] No terminal log to save")
+                return
+
+            log_path = self.current_run_dir / "terminal_log.txt"
+            log_path.write_text(log_text, encoding="utf-8")
+            print(f"[DataManager] [{self.robot_id}] Terminal log saved → {log_path}")
+        except Exception as e:
+            print(f"[DataManager] [{self.robot_id}] Failed to save terminal log: {e}")
