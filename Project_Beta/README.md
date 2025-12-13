@@ -26,6 +26,12 @@ You can race against a friend or against your own AI algorithms, then share your
 - X (Twitter) integration for sharing achievements
 - View results at: [https://virtualrobotrace.com](https://virtualrobotrace.com)
 
+### 🎯 Input Vector Scope (v1.1)
+- Real-time visualization of drive torque and steering angle
+- Circular radar display with motion trail (afterimage effect)
+- Cyan dot for acceleration, red for braking
+- Educational value: smooth curves = good AI control, jagged = poor control
+
 ---
 
 ## 🔍 Overview
@@ -117,7 +123,7 @@ Project_Beta/Robot2/models/model.pth
 Project_Beta/
 ├── main.py                  # Main launcher
 ├── websocket_client.py      # Communication with Unity
-├── config.py                # Configuration loader
+├── config_loader.py         # Configuration loader
 ├── config.txt               # Global settings (which robots to activate)
 ├── requirements.txt         # Python dependencies
 ├── setup_env.bat            # Quick setup script
@@ -414,7 +420,14 @@ Please share your test results with us via Discord or GitHub Issues. 😊
 
 ## Changelog
 
-### 2025-11-30
+### v1.1 (2025-12-13)
+- **New**: Input Vector Scope UI - real-time visualization of drive/steer inputs with motion trail
+- **New**: Rule-Based autonomous driving achieves 2-lap goal
+- **Fix**: AI mode start signal timing delay resolved with async WebSocket
+- **Improve**: AI inference optimization with preload_model() for faster startup
+- **Refactor**: Renamed config.py to config_loader.py to prevent user confusion
+
+### v1.0 (2025-11-30)
 - **Fix**: Rule-based mode (MODE_NUM=3) now works correctly when launched via `main.py`
   - Fixed module import path issue for `rule_based_algorithms` in Robot1/Robot2
 
