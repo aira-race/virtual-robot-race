@@ -502,6 +502,29 @@ async def main() -> None:
                     traceback.print_exc()
         print("[Main] AI model preloading complete.")
 
+        # Phase 1.6: CUDA warmup for AI robots
+        # This eliminates 10+ second delay on first inference by initializing GPU kernels
+        print("[Main] Warming up CUDA for AI-mode robots...")
+        for robot_id, (mode, robot_num, rc) in robot_modes.items():
+            if mode == "ai":
+                inference_module = rc.get('_preloaded_inference_module')
+                if inference_module:
+                    try:
+                        inference_module.warmup_cuda()
+                    except Exception as e:
+                        print(f"[Main] WARNING: CUDA warmup failed for Robot{robot_num}: {e}")
+        print("[Main] CUDA warmup complete.")
+
+        # Phase 1.7: Send ready signals to Unity
+        # Unity will wait for all robots to be ready before starting the race
+        print("[Main] Sending ready signals to Unity...")
+        for robot_id, client in robot_clients.items():
+            try:
+                await client.send_ready_signal()
+            except Exception as e:
+                print(f"[Main] WARNING: Failed to send ready signal for {robot_id}: {e}")
+        print("[Main] All ready signals sent. Waiting for Unity to start race...")
+
         print("[Main] Starting control modules simultaneously...")
 
         # Phase 2: Start all control modules and receive loops simultaneously

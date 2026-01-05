@@ -1,0 +1,48 @@
+iteration:
+  timestamp: '260104_204326'
+  created_at: '2026-01-04T20:43:27.525231'
+  description: First 3 manual runs - keyboard control, 2026-01-04
+data_source:
+  original_dir: D:\AARACE\GitProjects\virtual-robot-race\Project_Beta\Robot1\training_data
+  total_runs: 3
+  run_names:
+  - run_20260104_203717
+  - run_20260104_203812
+  - run_20260104_203901
+data_statistics:
+  total_frames: 1622
+  total_racing_frames: 1401
+  avg_steer: 0.2916
+  left_steer_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - f8
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    4XoUrkfhyj8=
+  right_steer_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    H4XrUbjeTEA=
+  neutral_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    hetRuB4FRUA=
+training:
+  status: not_started
+  model_path: null
+  best_val_loss: null
+  best_epoch: null
+evaluation:
+  test_runs: []
+  completion_rate: null

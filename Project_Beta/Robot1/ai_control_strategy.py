@@ -131,14 +131,21 @@ def should_wait_for_start(pil_img, race_started):
 
     # Hybrid mode: use rule-based start detection
     if not race_started and HYBRID_START_DETECTION:
-        # Initialize frame counter for timeout detection
-        if not hasattr(should_wait_for_start, '_wait_frames'):
+        # Initialize detection state
+        if not hasattr(should_wait_for_start, '_start_detected'):
+            should_wait_for_start._start_detected = False
             should_wait_for_start._wait_frames = 0
 
+        # If start was already detected, don't wait anymore
+        if should_wait_for_start._start_detected:
+            return False  # GO! (start already detected in previous frame)
+
         # detect_start_signal is loaded at module level using importlib
-        # Wait unless start signal is detected
+        # Returns True only ONCE when all red lamps turn OFF (F1-style start)
         if detect_start_signal(pil_img):
-            should_wait_for_start._wait_frames = 0  # Reset counter
+            should_wait_for_start._start_detected = True  # Remember we detected start
+            should_wait_for_start._wait_frames = 0
+            print("[Strategy] Red lamps OFF detected! Race started.")
             return False  # GO!
 
         # Check if red lamps were ever detected (ready_to_go flag in perception module)
@@ -150,7 +157,8 @@ def should_wait_for_start(pil_img, race_started):
         # Timeout: If no red lamps detected for a while, assume race already started
         if not lamps_detected and should_wait_for_start._wait_frames >= START_DETECTION_TIMEOUT_FRAMES:
             print(f"[Strategy] Timeout: No red lamps detected for {START_DETECTION_TIMEOUT_FRAMES} frames. Assuming race started.")
-            should_wait_for_start._wait_frames = 0  # Reset counter
+            should_wait_for_start._start_detected = True  # Mark as started
+            should_wait_for_start._wait_frames = 0
             return False  # GO! (assume race already running)
 
         return True   # Keep waiting
