@@ -15,6 +15,8 @@ import sys
 import time
 from typing import Optional
 from pathlib import Path
+import pandas as pd
+import shutil
 
 import config_loader
 from websocket_client import RobotWebSocketClient
@@ -113,8 +115,110 @@ async def wait_for_unity_server(server_url: str, timeout: float = 30.0) -> bool:
     return False
 
 
+def auto_rename_images(run_dir: Path) -> bool:
+    """
+    Automatically rename images to match metadata.csv filenames.
+    This fixes the tick-based vs sequential naming mismatch.
+
+    Args:
+        run_dir: Path to run_YYYYMMDD_HHMMSS directory
+
+    Returns:
+        True if successful or already correct, False if failed
+    """
+    csv_path = run_dir / "metadata.csv"
+    images_dir = run_dir / "images"
+
+    # Basic validation
+    if not csv_path.exists() or not images_dir.exists():
+        print("[Main] Auto-rename skipped: metadata.csv or images/ not found")
+        return False
+
+    # Load metadata
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        print(f"[Main] Auto-rename failed: Cannot load metadata.csv - {e}")
+        return False
+
+    # Get image files
+    image_files = sorted([f for f in images_dir.iterdir() if f.suffix == '.jpg'])
+
+    metadata_count = len(df)
+    image_count = len(image_files)
+
+    # Check count match
+    if metadata_count != image_count:
+        print(f"[Main] Auto-rename failed: Count mismatch (metadata={metadata_count}, images={image_count})")
+        return False
+
+    # Build rename mapping
+    rename_map = []
+    for idx, row in df.iterrows():
+        expected_name = row['filename']
+        actual_name = image_files[idx].name
+        if actual_name != expected_name:
+            rename_map.append((image_files[idx], images_dir / expected_name))
+
+    # If already correct, skip
+    if len(rename_map) == 0:
+        print("[Main] Auto-rename: All filenames already correct")
+        return True
+
+    print(f"[Main] Auto-rename: Renaming {len(rename_map)} files to match metadata...")
+
+    # Check for existing backup
+    backup_dir = run_dir / "images_backup"
+    if backup_dir.exists():
+        print(f"[Main] Auto-rename skipped: Backup already exists (images_backup/)")
+        return False
+
+    try:
+        # Create backup
+        shutil.copytree(images_dir, backup_dir)
+        print(f"[Main] Auto-rename: Backup created → images_backup/")
+
+        # Phase 1: Rename to temporary names (avoid conflicts)
+        temp_map = []
+        for old_path, new_path in rename_map:
+            temp_path = old_path.with_suffix('.tmp.jpg')
+            old_path.rename(temp_path)
+            temp_map.append((temp_path, new_path))
+
+        # Phase 2: Rename to final names
+        for temp_path, new_path in temp_map:
+            temp_path.rename(new_path)
+
+        # Verify
+        missing = []
+        for _, row in df.iterrows():
+            expected_path = images_dir / row['filename']
+            if not expected_path.exists():
+                missing.append(row['filename'])
+
+        if missing:
+            print(f"[Main] Auto-rename failed: {len(missing)} files missing after rename")
+            return False
+
+        print(f"[Main] Auto-rename: Successfully renamed {len(rename_map)} files")
+
+        # Success! Remove backup to save disk space
+        try:
+            shutil.rmtree(backup_dir)
+            print(f"[Main] Auto-rename: Backup removed (rename successful)")
+        except Exception as cleanup_error:
+            print(f"[Main] Auto-rename: Warning - Could not remove backup: {cleanup_error}")
+
+        return True
+
+    except Exception as e:
+        print(f"[Main] Auto-rename failed: {e}")
+        print(f"[Main] Auto-rename: Backup preserved at images_backup/ for recovery")
+        return False
+
+
 async def build_video_and_open_explorer(robot_config: dict) -> None:
-    """Post-race pipeline: Build MP4 from the latest run's images."""
+    """Post-race pipeline: Auto-rename images, then build MP4 from the latest run's images."""
     if not robot_config.get("AUTO_MAKE_VIDEO", 1):
         print("[Main] AUTO_MAKE_VIDEO=0 → Skip video pipeline.")
         return
@@ -134,6 +238,9 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
     if not images_dir.exists():
         print(f"[Main] Post-race video pipeline skipped: images dir not found → {images_dir}")
         return
+
+    # Auto-rename images to match metadata.csv BEFORE creating video
+    auto_rename_images(run_dir)
 
     out_path = run_dir / "output_video.mp4"
     fps = robot_config.get("VIDEO_FPS", 20)
