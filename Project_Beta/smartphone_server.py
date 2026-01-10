@@ -515,6 +515,93 @@ class SmartphoneServer:
 
         logger.info(f"All QR codes saved to {qr_dir}/")
 
+        # Display QR code in popup window (Windows)
+        self._show_qr_popup(qr_dir, local_ip)
+
+    def _show_qr_popup(self, qr_dir: Path, local_ip: str):
+        """Show QR codes in a popup window"""
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            import threading
+
+            def show_popup():
+                """Show QR code in a window (runs in separate thread)"""
+                try:
+                    # Get all QR code files
+                    qr_files = sorted(qr_dir.glob("*_controller.png"))
+
+                    if not qr_files:
+                        logger.warning("No QR code files found to display")
+                        return
+
+                    # Create a combined image with all QR codes
+                    qr_images = [Image.open(f) for f in qr_files]
+
+                    # Calculate layout
+                    qr_width, qr_height = qr_images[0].size
+                    num_robots = len(qr_images)
+
+                    # Layout: vertical stack
+                    padding = 40
+                    text_height = 80
+                    total_width = qr_width + padding * 2
+                    total_height = (qr_height + text_height + padding) * num_robots + padding
+
+                    # Create canvas
+                    canvas = Image.new('RGB', (total_width, total_height), 'white')
+                    draw = ImageDraw.Draw(canvas)
+
+                    # Try to load font (fallback to default if not available)
+                    try:
+                        title_font = ImageFont.truetype("arial.ttf", 24)
+                        url_font = ImageFont.truetype("arial.ttf", 14)
+                    except:
+                        title_font = ImageFont.load_default()
+                        url_font = ImageFont.load_default()
+
+                    # Draw each QR code with label
+                    y_offset = padding
+                    for idx, (qr_img, qr_file) in enumerate(zip(qr_images, qr_files)):
+                        robot_id = qr_file.stem.replace('_controller', '')
+
+                        # Draw title
+                        title = f"Robot {robot_id} Controller"
+                        draw.text((padding, y_offset), title, fill='black', font=title_font)
+
+                        # Draw URL
+                        url = f"http://{local_ip}:{self.port}/controller?robot={robot_id}"
+                        draw.text((padding, y_offset + 30), url, fill='blue', font=url_font)
+
+                        # Draw QR code
+                        canvas.paste(qr_img, (padding, y_offset + text_height))
+
+                        y_offset += qr_height + text_height + padding
+
+                    # Add footer instructions
+                    draw.text(
+                        (padding, total_height - 35),
+                        "Scan with smartphone camera to connect",
+                        fill='green',
+                        font=url_font
+                    )
+
+                    # Show image
+                    canvas.show(title="Virtual Robot Race - QR Codes")
+
+                    logger.info("QR code popup window opened")
+
+                except Exception as e:
+                    logger.error(f"Failed to show QR popup: {e}")
+
+            # Run in separate thread to not block main loop
+            popup_thread = threading.Thread(target=show_popup, daemon=True)
+            popup_thread.start()
+
+        except ImportError:
+            logger.warning("PIL not available for QR popup display")
+        except Exception as e:
+            logger.error(f"Error creating QR popup: {e}")
+
     @staticmethod
     def _get_local_ip() -> str:
         """Get local IP address for QR code generation"""
