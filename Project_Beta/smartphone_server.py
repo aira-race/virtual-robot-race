@@ -152,7 +152,7 @@ class RobotController:
 
         try:
             # Send to Unity via existing WebSocket client
-            await self.ws_client.send(json.dumps(control_msg))
+            await self.ws_client.send_json(control_msg)
             logger.debug(f"[{self.robot_id}] Control: steer={steer_angle:.2f}, torque={drive_torque:.2f}")
 
         except Exception as e:
