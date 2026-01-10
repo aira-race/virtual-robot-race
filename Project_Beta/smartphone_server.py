@@ -57,6 +57,10 @@ class RobotController:
         self.camera_task = None
         self.is_streaming = True
 
+        # Connection readiness state
+        self.is_ready = False  # True when dual-input test passed
+        self.ready_event = asyncio.Event()  # Signals when ready
+
         # Paths for camera image access
         self.data_dir = Path(f"Robot{self.robot_num}/data_interactive")
         self.buffer_pointer_file = self.data_dir / "latest_RGB_now.txt"
@@ -122,6 +126,21 @@ class RobotController:
 
         steer_angle = control_data.get('steerAngle', 0.0)
         drive_torque = control_data.get('driveTorque', 0.0)
+
+        # Check for readiness test (dual input: both steer and torque > threshold)
+        if not self.is_ready:
+            threshold = 0.3  # Both must be > 0.3 to count as intentional
+            if abs(steer_angle) > threshold and abs(drive_torque) > threshold:
+                self.is_ready = True
+                self.ready_event.set()
+                logger.info(f"[{self.robot_id}] ✓ Readiness test PASSED (dual input detected)")
+                logger.info(f"[{self.robot_id}]   Steer={steer_angle:.2f}, Torque={drive_torque:.2f}")
+
+                # Notify smartphone
+                await self._send_to_smartphone({
+                    'type': 'ready_confirmed',
+                    'message': 'Connection test passed! Race will start soon.'
+                })
 
         # Create control message for Unity (matching existing format)
         control_msg = {
@@ -268,6 +287,40 @@ class SmartphoneServer:
             logger.info(f"Registered robot: {robot_id}")
         else:
             self.controllers[robot_id].set_websocket_client(websocket_client)
+
+    async def wait_for_all_ready(self, timeout: float = 300.0):
+        """
+        Wait for all registered robots to pass the readiness test.
+        Returns True if all ready, False if timeout.
+        """
+        logger.info(f"Waiting for {len(self.controllers)} robot(s) to confirm connection...")
+        logger.info("Please scan QR code and perform dual-input test:")
+        logger.info("  → Touch BOTH joysticks simultaneously (e.g., forward + right)")
+
+        start_time = asyncio.get_event_loop().time()
+
+        while True:
+            # Check if all are ready
+            all_ready = all(ctrl.is_ready for ctrl in self.controllers.values())
+
+            if all_ready:
+                logger.info("✓ All robots are ready!")
+                return True
+
+            # Check timeout
+            elapsed = asyncio.get_event_loop().time() - start_time
+            if elapsed > timeout:
+                logger.warning(f"Timeout waiting for readiness ({timeout}s)")
+                ready_count = sum(1 for ctrl in self.controllers.values() if ctrl.is_ready)
+                logger.warning(f"Only {ready_count}/{len(self.controllers)} robots are ready")
+                return False
+
+            # Show progress every 5 seconds
+            if int(elapsed) % 5 == 0 and int(elapsed) > 0:
+                ready_count = sum(1 for ctrl in self.controllers.values() if ctrl.is_ready)
+                logger.info(f"Progress: {ready_count}/{len(self.controllers)} ready ({int(elapsed)}s elapsed)")
+
+            await asyncio.sleep(0.5)
 
     async def handle_index(self, request):
         """Handle root path"""

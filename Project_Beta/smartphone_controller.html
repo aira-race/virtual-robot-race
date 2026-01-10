@@ -231,6 +231,7 @@
         // WebSocket connection
         let ws = null;
         let isConnected = false;
+        let isReady = false;  // True after dual-input test passes
 
         // Control state
         let steerAngle = 0.0;
@@ -264,9 +265,16 @@
             ws.onopen = () => {
                 console.log('WebSocket connected');
                 isConnected = true;
-                updateStatus(true, `ROBOT ${ROBOT_ID} - LIVE`);
-                cameraStatus.textContent = 'LIVE: ~0.5s DELAY';
-                cameraStatus.classList.remove('scanning');
+
+                if (!isReady) {
+                    updateStatus(true, `CONNECTED - TOUCH BOTH JOYSTICKS`);
+                    cameraStatus.textContent = 'WAITING FOR DUAL-INPUT TEST';
+                    cameraStatus.classList.add('scanning');
+                } else {
+                    updateStatus(true, `ROBOT ${ROBOT_ID} - LIVE`);
+                    cameraStatus.textContent = 'LIVE: ~0.5s DELAY';
+                    cameraStatus.classList.remove('scanning');
+                }
             };
 
             ws.onmessage = (event) => {
@@ -277,6 +285,17 @@
                         updateCameraFeed(data.image);
                     } else if (data.type === 'pong') {
                         console.log('Pong received');
+                    } else if (data.type === 'ready_confirmed') {
+                        isReady = true;
+                        updateStatus(true, `READY - RACE STARTING SOON`);
+                        cameraStatus.textContent = data.message || 'Race will start soon!';
+                        cameraStatus.classList.remove('scanning');
+
+                        // Show success for 3 seconds
+                        setTimeout(() => {
+                            updateStatus(true, `ROBOT ${ROBOT_ID} - LIVE`);
+                            cameraStatus.textContent = 'LIVE: ~0.5s DELAY';
+                        }, 3000);
                     }
                 } catch (e) {
                     console.error('Message parse error:', e);

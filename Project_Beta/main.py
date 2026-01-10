@@ -660,6 +660,23 @@ async def main() -> None:
             await smartphone_server.start()
             print("[Main] Smartphone server started and ready for connections")
 
+            # Wait for all smartphone controllers to pass readiness test
+            print("[Main] =" * 30)
+            print("[Main] Waiting for smartphone connection confirmation...")
+            print("[Main] Instructions:")
+            print("[Main]   1. Scan QR code with your smartphone")
+            print("[Main]   2. Touch BOTH joysticks at the same time")
+            print("[Main]   3. Race will start automatically when confirmed")
+            print("[Main] =" * 30)
+
+            all_ready = await smartphone_server.wait_for_all_ready(timeout=300.0)
+
+            if not all_ready:
+                print("[Main] ERROR: Not all robots confirmed connection within timeout")
+                print("[Main] Proceeding anyway, but connection may be unstable")
+            else:
+                print("[Main] ✓ All smartphones confirmed! Starting race sequence...")
+
         print("[Main] Starting control modules simultaneously...")
 
         # Phase 2: Start all control modules and receive loops simultaneously
