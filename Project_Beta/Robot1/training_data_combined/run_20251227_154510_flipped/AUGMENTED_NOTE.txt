@@ -1,3 +1,0 @@
-This run was created by horizontal flip augmentation.
-Original run: run_20251227_154510
-Images are flipped, steering angles are negated.

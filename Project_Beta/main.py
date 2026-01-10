@@ -651,6 +651,7 @@ async def main() -> None:
         print(f"[Main] All control modules started at the same time")
 
         # 6) Wait for stop_event or any client to stop
+        force_ended = False  # Track if ended with 'q' key
         while not stop_event.is_set():
             # Check if any client is still running
             any_running = any(client.running for client in robot_clients.values())
@@ -664,15 +665,92 @@ async def main() -> None:
             try:
                 import keyboard
                 if keyboard.is_pressed("q"):
-                    print("[Main] 'q' pressed → Stopping...")
-                    stop_event.set()
+                    print("[Main] 'q' pressed → Sending force-end signal to Unity...")
+                    force_ended = True
+
+                    # Send force_end message to Unity to trigger metadata send
+                    for robot_id, client in robot_clients.items():
+                        try:
+                            force_end_msg = {
+                                "type": "force_end",
+                                "robot_id": robot_id,
+                                "message": "Python client force-ended with 'q' key"
+                            }
+                            await client.send_json(force_end_msg)
+                        except Exception as e:
+                            print(f"[Main] Failed to send force_end to {robot_id}: {e}")
+
                     break
             except Exception:
                 pass
 
         # 7) Cleanup
         print("[Main] Shutting down...")
-        stop_event.set()
+
+        # If force-ended with 'q', wait for Unity to send metadata before stopping
+        if force_ended:
+            print("[Main] Force-end detected. Waiting for Unity metadata (up to 1.5s)...")
+
+            # Wait for metadata with timeout (keep receive_loop running)
+            wait_start = asyncio.get_event_loop().time()
+            metadata_timeout = 1.5  # seconds
+
+            while asyncio.get_event_loop().time() - wait_start < metadata_timeout:
+                # Check if metadata received for all robots with DATA_SAVE=1
+                all_received = True
+                for robot_id, client in robot_clients.items():
+                    if client.data_manager is not None:
+                        meta_csv = client.data_manager.current_run_dir / "metadata.csv"
+                        if meta_csv.exists():
+                            try:
+                                # Check if CSV has data rows (more than just header)
+                                with open(meta_csv, 'r', encoding='utf-8') as f:
+                                    lines = f.readlines()
+                                    # Valid metadata should have header + at least one data row
+                                    # Skip "Force end" fallback (which only has 1 data row with all zeros)
+                                    if len(lines) > 2:  # Header + multiple data rows
+                                        print(f"[Main] {robot_id} metadata received ({len(lines)-1} data rows)")
+                                    else:
+                                        all_received = False
+                            except Exception as e:
+                                all_received = False
+                        else:
+                            all_received = False
+
+                if all_received:
+                    print("[Main] All metadata received from Unity!")
+                    break
+
+                # Short sleep to allow receive_loop to process messages
+                await asyncio.sleep(0.1)
+
+            # Now stop event (after waiting for metadata)
+            stop_event.set()
+
+            # Check which robots didn't receive metadata and save fallback
+            for robot_id, client in robot_clients.items():
+                if client.data_manager is not None:
+                    meta_csv = client.data_manager.current_run_dir / "metadata.csv"
+                    needs_fallback = True
+
+                    if meta_csv.exists():
+                        try:
+                            with open(meta_csv, 'r', encoding='utf-8') as f:
+                                lines = f.readlines()
+                                if len(lines) > 2:  # Has real data from Unity
+                                    needs_fallback = False
+                        except:
+                            pass
+
+                    if needs_fallback:
+                        print(f"[Main] {robot_id} did not receive metadata from Unity. Saving fallback...")
+                        try:
+                            client.data_manager.save_force_end_metadata()
+                        except Exception as e:
+                            print(f"[Main] Failed to save force-end logs for {robot_id}: {e}")
+        else:
+            # Normal shutdown - stop immediately
+            stop_event.set()
 
         # Cancel all tasks
         for task in all_tasks:
