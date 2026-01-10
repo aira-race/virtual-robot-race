@@ -146,7 +146,7 @@ virtual-robot-race/
 ## 🌐 Community & Support
 
 - 🌐 **Official Website**: [virtualrobotrace.com](https://virtualrobotrace.com)
-- 🎥 **YouTube**: [@AAgrand_prix](https://www.youtube.com/@AAgrand_prix)
+- 🎥 **YouTube**: [@RaceYourAlgo](https://www.youtube.com/@RaceYourAlgo)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/AAgrandprix/virtual-robot-race/issues)
 - 📊 **Leaderboard**: View global rankings at the official website
 
