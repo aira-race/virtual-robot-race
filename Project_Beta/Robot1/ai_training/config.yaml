@@ -62,8 +62,8 @@ data_filtering:
   # Include runs by final status
   valid_final_status:
     - "Finish"      # Completed 2 laps
-    - "Lap2"        # Completed 1 lap, in progress on 2nd
-    - "Lap1"        # At least started racing
+    - "Lap1"        # Completed 1 lap
+    - "Lap0"        # Started racing (partial data)
 
   # Exclude runs with these conditions
   exclude_conditions:
