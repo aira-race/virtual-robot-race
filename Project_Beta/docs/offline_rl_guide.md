@@ -343,12 +343,121 @@ Robot1/
 
 ---
 
-## 7. 参考文献
+## 7. 実験結果サマリー（2026-01-17）
+
+### 各手法の比較
+
+| Phase | 手法 | Best Val Loss | 走行結果 | 特徴 |
+|-------|------|---------------|----------|------|
+| 0 | BC | - | 落下 | シンプルだが分布シフトに弱い |
+| 1 | RW-BC (temp=1.0) | 0.0316 | 2周完走 | 安定 |
+| 1 | RW-BC (temp=0.5) | 0.0309 | 2周完走 | より速い |
+| 2 | RW-BC + 詳細報酬 | - | 落下 | 落下データも含めると不安定 |
+| 2 | RW-BC + 詳細報酬 + min-score | ~0.030 | 2周完走 | 完走データのみで安定 |
+| 3 | AWR | 0.0308 | 2周完走（ギリギリ） | 速いがアグレッシブすぎる |
+
+### 重要な発見
+
+1. **データ品質が最重要**
+   - 落下データを含めると悪い操作パターンを学習
+   - `--min-score 1000` で完走データのみ使用すると安定
+
+2. **Phase 2 (RW-BC + 詳細報酬 + min-score) が現時点でベスト**
+   - 安定性と速さのバランスが良い
+   - 推奨コマンド:
+   ```bash
+   python train.py --data training_data --mode rw --reward-type detailed --min-score 1000
+   ```
+
+3. **AWR は速いがチューニングが必要**
+   - 壁にぶつかりやすい
+   - 報酬設計（smoothness_penalty増加など）で改善の余地あり
+
+---
+
+## 8. 今後の方針
+
+### 優先度1: データソースの強化（最重要）
+
+```
+現状:
+  完走データ: 5-6 runs
+  落下データ: 5-6 runs
+
+目標:
+  完走データ: 20+ runs
+  多様な走行パターン
+```
+
+**データ収集の戦略:**
+
+| ソース | 期待される特徴 |
+|--------|----------------|
+| マニュアル（人間） | 多様な判断、リカバリー能力 |
+| ルールベース | 安定した基本動作 |
+| 現行AI（RW-BC） | 既存の良いパターンの再現 |
+
+### 優先度2: 既存手法の改善
+
+**AWR の報酬設計調整:**
+```python
+# 現在
+REWARD_CONFIG = {
+    'smoothness_penalty': 0.5,
+    'progress_reward': 1.0,
+}
+
+# 提案（安定性重視）
+REWARD_CONFIG = {
+    'smoothness_penalty': 1.0,   # 増加
+    'progress_reward': 0.5,      # 減少
+    'wall_penalty': -1.0,        # 新規追加（位置情報から）
+}
+```
+
+### 優先度3: 新しい手法の検討
+
+**候補:**
+- IQL (Implicit Q-Learning): より高度なオフラインRL
+- Decision Transformer: Transformerベースのアプローチ
+- CQL (Conservative Q-Learning): 保守的なQ学習
+
+---
+
+## 9. 実装済みCLIオプション一覧
+
+```bash
+# 基本
+python train.py --data training_data
+
+# Phase 1: RW-BC
+python train.py --data training_data --mode rw --temperature 1.0
+
+# Phase 2: 詳細報酬
+python train.py --data training_data --mode rw --reward-type detailed
+
+# Phase 2 + スコアフィルタリング（推奨）
+python train.py --data training_data --mode rw --reward-type detailed --min-score 1000
+
+# Phase 3: AWR
+python train.py --data training_data --mode awr --reward-type detailed --min-score 1000
+
+# ファインチューニング
+python train.py --data training_data --mode rw --finetune models/model.pth
+
+# 温度調整
+python train.py --data training_data --mode rw --temperature 0.5
+```
+
+---
+
+## 10. 参考文献
 
 - **Behavioral Cloning**: Pomerleau (1991) "ALVINN: An Autonomous Land Vehicle in a Neural Network"
 - **DAgger**: Ross et al. (2011) "A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning"
 - **AWR**: Peng et al. (2019) "Advantage-Weighted Regression: Simple and Scalable Off-Policy Reinforcement Learning"
 - **Offline RL Survey**: Levine et al. (2020) "Offline Reinforcement Learning: Tutorial, Review, and Perspectives on Open Problems"
+- **IQL**: Kostrikov et al. (2022) "Offline Reinforcement Learning with Implicit Q-Learning"
 
 ---
 
@@ -357,4 +466,6 @@ Robot1/
 | 日付 | 内容 |
 |------|------|
 | 2026-01-12 | Phase 1 (RW-BC) 実装完了、実験成功 |
-| 2026-01-13 | ドキュメント作成 |
+| 2026-01-17 | Phase 2 (詳細報酬) 実装完了 |
+| 2026-01-17 | Phase 3 (AWR) 実装完了 |
+| 2026-01-17 | 実験結果サマリーと今後の方針を追加 |
