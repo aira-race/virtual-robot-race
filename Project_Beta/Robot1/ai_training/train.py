@@ -36,7 +36,7 @@ import yaml
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from model import DrivingNetwork
+from model import DrivingNetwork, ValueNetwork
 
 # Import run scorer for score-based filtering
 try:
@@ -241,6 +241,188 @@ def compute_cumulative_rewards(
         cumulative[i] = running_sum
 
     return cumulative
+
+
+# =============================================================================
+# Phase 3: AWR (Advantage-Weighted Regression)
+# =============================================================================
+
+def train_value_function(
+    value_net: nn.Module,
+    dataloader: DataLoader,
+    epochs: int,
+    device: torch.device,
+    lr: float = 1e-4
+) -> float:
+    """
+    Train the value function to predict cumulative rewards.
+
+    Args:
+        value_net: ValueNetwork model
+        dataloader: DataLoader with samples containing 'reward' (cumulative reward)
+        epochs: Number of training epochs
+        device: torch device
+        lr: Learning rate
+
+    Returns:
+        Final validation loss
+    """
+    value_net.train()
+    optimizer = torch.optim.AdamW(value_net.parameters(), lr=lr, weight_decay=1e-4)
+    criterion = nn.MSELoss()
+
+    best_loss = float('inf')
+
+    for epoch in range(epochs):
+        total_loss = 0.0
+        count = 0
+
+        for batch in dataloader:
+            images = batch["image"].to(device)
+            soc = batch["soc"].to(device)
+            target_values = batch["reward"].to(device)  # Cumulative rewards as targets
+
+            optimizer.zero_grad()
+            predicted_values = value_net(images, soc)
+            loss = criterion(predicted_values, target_values)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item() * images.size(0)
+            count += images.size(0)
+
+        avg_loss = total_loss / count
+        if avg_loss < best_loss:
+            best_loss = avg_loss
+
+        if (epoch + 1) % 10 == 0 or epoch == 0:
+            print(f"[Value] Epoch {epoch+1}/{epochs} | Loss: {avg_loss:.6f}")
+
+    return best_loss
+
+
+def compute_advantages(
+    value_net: nn.Module,
+    dataloader: DataLoader,
+    device: torch.device
+) -> Dict[int, float]:
+    """
+    Compute advantages for all samples in the dataset.
+
+    Advantage = Actual cumulative reward - Predicted value V(s)
+
+    Args:
+        value_net: Trained ValueNetwork
+        dataloader: DataLoader with samples
+        device: torch device
+
+    Returns:
+        Dict mapping sample index to advantage value
+    """
+    value_net.eval()
+    advantages = {}
+    sample_idx = 0
+
+    with torch.no_grad():
+        for batch in dataloader:
+            images = batch["image"].to(device)
+            soc = batch["soc"].to(device)
+            actual_rewards = batch["reward"].to(device)
+
+            predicted_values = value_net(images, soc)
+
+            # Advantage = Actual - Predicted
+            batch_advantages = (actual_rewards - predicted_values).squeeze().cpu().numpy()
+
+            # Handle single sample case
+            if batch_advantages.ndim == 0:
+                batch_advantages = [batch_advantages.item()]
+
+            for adv in batch_advantages:
+                advantages[sample_idx] = float(adv)
+                sample_idx += 1
+
+    return advantages
+
+
+def train_policy_with_advantages(
+    model: nn.Module,
+    dataloader: DataLoader,
+    advantages: Dict[int, float],
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+    temperature: float = 1.0
+) -> Dict[str, float]:
+    """
+    Train policy network using advantage-weighted regression.
+
+    Loss = sum(weight * MSE) where weight = exp(advantage / temperature)
+
+    Args:
+        model: Policy network (DrivingNetwork)
+        dataloader: DataLoader
+        advantages: Dict mapping sample index to advantage
+        criterion: Loss function (not used directly, weights computed manually)
+        optimizer: Optimizer
+        device: torch device
+        temperature: Temperature for advantage weighting
+
+    Returns:
+        Training metrics dict
+    """
+    model.train()
+    total_loss = 0.0
+    total_torque_loss = 0.0
+    total_steer_loss = 0.0
+    count = 0
+    sample_idx = 0
+
+    for batch in dataloader:
+        images = batch["image"].to(device)
+        soc = batch["soc"].to(device)
+        targets = batch["targets"].to(device)
+
+        # Get advantages for this batch
+        batch_size = images.size(0)
+        batch_advantages = []
+        for i in range(batch_size):
+            adv = advantages.get(sample_idx + i, 0.0)
+            batch_advantages.append(adv)
+        sample_idx += batch_size
+
+        # Compute weights from advantages
+        adv_tensor = torch.tensor(batch_advantages, device=device, dtype=torch.float32)
+        weights = torch.exp(adv_tensor / temperature)
+
+        # Normalize weights to prevent explosion
+        weights = weights / (weights.sum() + 1e-8) * batch_size
+
+        optimizer.zero_grad()
+        outputs = model(images, soc)
+
+        # Weighted MSE loss
+        per_sample_loss = ((outputs - targets) ** 2).mean(dim=1)
+        loss = (weights * per_sample_loss).mean()
+
+        loss.backward()
+        optimizer.step()
+
+        # Track metrics
+        with torch.no_grad():
+            torque_loss = ((outputs[:, 0] - targets[:, 0]) ** 2).mean().item()
+            steer_loss = ((outputs[:, 1] - targets[:, 1]) ** 2).mean().item()
+
+        total_loss += loss.item() * batch_size
+        total_torque_loss += torque_loss * batch_size
+        total_steer_loss += steer_loss * batch_size
+        count += batch_size
+
+    return {
+        "loss": total_loss / count,
+        "torque_loss": total_torque_loss / count,
+        "steer_loss": total_steer_loss / count
+    }
 
 
 class DrivingDataset(Dataset):
@@ -786,16 +968,23 @@ def train(
         data_source_dir: Optional training data source directory
         min_score: Only use runs with score >= this value
         top_percent: Only use top N% of runs by score
-        mode: Training mode - "bc" (Behavioral Cloning) or "rw" (Reward-Weighted BC)
+        mode: Training mode - "bc", "rw" (Reward-Weighted BC), or "awr" (Advantage-Weighted Regression)
         finetune_path: Path to existing model for fine-tuning (optional)
-        temperature: Temperature for reward weighting in RW mode (default: 1.0)
+        temperature: Temperature for reward weighting in RW/AWR mode (default: 1.0)
         reward_type: "simple" (Phase 1) or "detailed" (Phase 2) reward calculation
 
     Returns:
         Training results dictionary
     """
-    use_reward_weighting = (mode == "rw")
-    print(f"[Train] Mode: {mode.upper()}" + (" (Reward-Weighted)" if use_reward_weighting else " (Behavioral Cloning)"))
+    use_reward_weighting = (mode in ["rw", "awr"])
+    use_awr = (mode == "awr")
+
+    mode_desc = {
+        "bc": "Behavioral Cloning",
+        "rw": "Reward-Weighted BC",
+        "awr": "Advantage-Weighted Regression (AWR)"
+    }
+    print(f"[Train] Mode: {mode.upper()} ({mode_desc.get(mode, mode)})")
 
     if finetune_path:
         print(f"[Train] Fine-tuning from: {finetune_path}")
@@ -803,6 +992,9 @@ def train(
     if use_reward_weighting:
         print(f"[Train] Temperature: {temperature}")
         print(f"[Train] Reward type: {reward_type}")
+
+    if use_awr:
+        print(f"[Train] AWR: Will train value function first, then policy with advantages")
 
     # Setup paths
     training_data_dir = robot_dir / config['paths']['training_data']
@@ -953,16 +1145,65 @@ def train(
     epochs = train_config.get('epochs', 100)
     best_val_loss = float('inf')
 
+    # AWR: Train value function first, then compute advantages
+    advantages = None
+    if use_awr:
+        print(f"\n[Train] AWR Stage 1: Training value function...")
+        print("=" * 70)
+
+        # Create value network
+        value_net = ValueNetwork().to(device)
+        value_params = sum(p.numel() for p in value_net.parameters())
+        print(f"[Train] Value network parameters: {value_params:,}")
+
+        # Need a dataloader without shuffle to maintain index correspondence
+        full_loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=(device.type == "cuda")
+        )
+
+        # Train value function for fewer epochs
+        value_epochs = min(30, epochs // 3)
+        value_loss = train_value_function(
+            value_net, full_loader, value_epochs, device, lr=lr
+        )
+        print(f"[Train] Value function training complete. Final loss: {value_loss:.6f}")
+
+        # Save value network
+        value_path = iteration_dir / "value_net.pth"
+        torch.save(value_net.state_dict(), value_path)
+        print(f"[Train] Value network saved to: {value_path}")
+
+        # Compute advantages for all samples
+        print(f"\n[Train] AWR Stage 2: Computing advantages...")
+        advantages = compute_advantages(value_net, full_loader, device)
+        adv_values = list(advantages.values())
+        print(f"[Train] Advantages computed: min={min(adv_values):.3f}, max={max(adv_values):.3f}, mean={np.mean(adv_values):.3f}")
+
+        print(f"\n[Train] AWR Stage 3: Training policy with advantages...")
+        print("=" * 70)
+
     print(f"\n[Train] Starting training for up to {epochs} epochs...")
     print("=" * 70)
 
     for epoch in range(epochs):
         # Train
-        train_metrics = train_one_epoch(
-            model, train_loader, criterion, optimizer, device,
-            use_reward_weighting=use_reward_weighting,
-            temperature=temperature
-        )
+        if use_awr and advantages is not None:
+            # AWR: Use advantage-weighted training
+            train_metrics = train_policy_with_advantages(
+                model, train_loader, advantages, criterion, optimizer, device,
+                temperature=temperature
+            )
+        else:
+            # BC or RW-BC: Use standard training
+            train_metrics = train_one_epoch(
+                model, train_loader, criterion, optimizer, device,
+                use_reward_weighting=use_reward_weighting,
+                temperature=temperature
+            )
 
         # Validate
         val_metrics = validate(model, val_loader, criterion, device)
@@ -1095,9 +1336,9 @@ def main():
     parser.add_argument("--top-percent", type=float, default=None,
                         help="Only use top N%% of runs by score (e.g., 50 for top 50%%)")
 
-    # Reward-Weighted BC options
-    parser.add_argument("--mode", type=str, default="bc", choices=["bc", "rw"],
-                        help="Training mode: bc (Behavioral Cloning) or rw (Reward-Weighted BC)")
+    # Reward-Weighted BC / AWR options
+    parser.add_argument("--mode", type=str, default="bc", choices=["bc", "rw", "awr"],
+                        help="Training mode: bc (Behavioral Cloning), rw (Reward-Weighted BC), awr (Advantage-Weighted Regression)")
     parser.add_argument("--finetune", type=str, default=None,
                         help="Path to existing model for fine-tuning (loads weights, uses smaller LR)")
     parser.add_argument("--temperature", type=float, default=1.0,
@@ -1182,7 +1423,9 @@ def main():
         print(f"[Train] Fine-tuning from: {finetune_path}")
 
     # Print training mode info
-    if args.mode == "rw":
+    if args.mode == "awr":
+        print(f"[Train] Mode: AWR (temperature={args.temperature}, reward_type={args.reward_type})")
+    elif args.mode == "rw":
         print(f"[Train] Mode: Reward-Weighted BC (temperature={args.temperature}, reward_type={args.reward_type})")
     else:
         print(f"[Train] Mode: Standard Behavioral Cloning")

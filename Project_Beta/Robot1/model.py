@@ -122,6 +122,104 @@ class DrivingNetwork(nn.Module):
 SteerNet = DrivingNetwork
 
 
+class ValueNetwork(nn.Module):
+    """
+    Value Network for AWR (Advantage-Weighted Regression).
+
+    Estimates the expected cumulative reward from a given state.
+    Same architecture as DrivingNetwork but outputs a single scalar V(s).
+
+    Architecture:
+        - CNN feature extractor (shared structure with DrivingNetwork)
+        - Concatenate with SOC
+        - MLP head (Feature + SOC -> V(s))
+    """
+
+    def __init__(self, image_size=224):
+        super().__init__()
+
+        # CNN Feature Extractor (same as DrivingNetwork)
+        self.cnn = nn.Sequential(
+            # Block 1: 224 -> 112
+            nn.Conv2d(3, 32, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+
+            # Block 2: 112 -> 56
+            nn.Conv2d(32, 64, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+
+            # Block 3: 56 -> 28
+            nn.Conv2d(64, 128, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+
+            # Block 4: 28 -> 14
+            nn.Conv2d(128, 256, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+
+            # Global Average Pooling: 14x14 -> 1x1
+            nn.AdaptiveAvgPool2d((1, 1))
+        )
+
+        # MLP Head for Value estimation
+        # Input: CNN features (256) + SOC (1) = 257
+        # Output: Scalar value V(s)
+        self.mlp = nn.Sequential(
+            nn.Linear(256 + 1, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.3),
+
+            nn.Linear(128, 64),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.2),
+
+            nn.Linear(64, 1)  # Output: V(s) - expected cumulative reward
+        )
+
+        # Initialize weights
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize network weights."""
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, image, soc):
+        """
+        Forward pass.
+
+        Args:
+            image: [B, 3, 224, 224] - RGB image tensor (normalized)
+            soc: [B, 1] - State of Charge tensor
+
+        Returns:
+            value: [B, 1] - Estimated value V(s)
+        """
+        # CNN feature extraction
+        features = self.cnn(image)
+        features = features.view(features.size(0), -1)  # [B, 256]
+
+        # Concatenate with SOC
+        combined = torch.cat([features, soc], dim=1)  # [B, 257]
+
+        # MLP head
+        value = self.mlp(combined)  # [B, 1]
+
+        return value
+
+
 if __name__ == "__main__":
     # Quick test
     model = DrivingNetwork()
