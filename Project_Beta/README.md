@@ -1,86 +1,79 @@
-# 🌟 Virtual Robot Race - Beta Version
+# Virtual Robot Race - Beta Version
 
-### 🏁 Race Against Each Other with Realistic Car Physics!
+### Race Against Each Other with Realistic Car Physics!
 
 Welcome to the **Beta version** of Virtual Robot Race!
-This version introduces **2-robot racing** with **torque steer dynamics** — drive like a real car, not a tank!
+This version features **2-robot racing** with **torque steer dynamics** — drive like a real car, not a tank!
 
-You can race against a friend or against your own AI algorithms, then share your lap times on our global leaderboard.
+Race against a friend or against your own AI algorithms, then share your lap times on the global leaderboard.
 
 ---
 
-## 🆕 What's New in Beta
+## What's New in Beta
 
-### 📱 Beta 1.3 - Smartphone Controller & UI Improvements (2026-01-11)
-- **New**: Smartphone controller mode (MODE_NUM=5) - Control your robot using your phone as a gamepad!
+### Beta 1.5 - SOC-based Collision Penalty System (2026-02-08)
+- **New**: Collision penalty system — collisions drain battery (SOC) proportional to impact energy
+  - Wall collision: 100% self-responsibility, penalty based on speed squared
+  - Robot-to-robot collision: responsibility split based on velocity direction
+  - 1-second cooldown prevents double-counting from physics bounces
+  - Formula: `Penalty = k * E * R` where k=normalization, E=energy, R=responsibility
+- **New**: Collision data logged per-frame in metadata.csv (`collision_type`, `collision_penalty`, `collision_target`)
+- **New**: Battery depletion status — robots with empty battery become obstacles on track
+
+### Beta 1.4 - Offline Reinforcement Learning Framework (2026-01-17)
+- **New**: Offline RL training pipeline using recorded race data
+  - Phase 1: DAgger+ (Dataset Aggregation with expert correction)
+  - Phase 2: Frame-level reward calculation from telemetry
+  - Phase 3: AWR (Advantage-Weighted Regression) for policy improvement
+- **New**: AI MLP Complete Guide documentation
+- **New**: Rule-based control detailed guide documentation
+
+### Beta 1.3 - Smartphone Controller & UI Improvements (2026-01-11)
+- **New**: Smartphone controller mode (MODE_NUM=5) - Control your robot using your phone as a gamepad
   - Dual virtual joysticks: Left=Throttle, Right=Steering
   - Real-time camera feed from robot
   - QR code connection for easy setup
 - **New**: PanelManager for dynamic camera panel layout
-  - 1 robot: centered at bottom
-  - 2 robots: arranged horizontally at bottom
-  - Auto-adjusts on window resize
-- **Improve**: InputVectorScope circle rendering (128px resolution, anti-aliasing, thicker ring)
+- **Improve**: InputVectorScope circle rendering (anti-aliasing, thicker ring)
 - **Refactor**: Robot visibility management moved from WebSocketServer to GameManager
 
-### 🔧 Beta 1.2 - Training Data Integrity Fix (2026-01-10)
+### Beta 1.2 - Training Data Integrity Fix (2026-01-10)
 **CRITICAL FIX**: Resolves training data corruption that prevented AI models from learning properly.
 
-- **Problem Identified**: Image filenames saved by Python didn't match Unity's metadata.csv
-  - Unity: `tick=329` → `frame_000329.jpg` (tick-based naming)
-  - Python: 1st image → `frame_000001.jpg` (sequential counting)
-  - Result: 328-frame offset causing complete training failure
+- **Problem**: Image filenames saved by Python didn't match Unity's metadata.csv (328-frame offset)
 - **Solution**: Official training data correction tool (`scripts/data_manager_post.py`)
-  - Sequential renaming to align images with metadata
-  - Automatic backup system for safety
-  - Multi-robot support (Robot1-5)
-  - Dry-run verification before applying changes
 - **Impact**: Enables proper AI training and significantly improves model performance
-- **Documentation**: See [scripts/README_fix_training_data.md](scripts/README_fix_training_data.md)
 
-### 🚗 Torque Steer Driving (Like a Real Car!)
-- **Alpha**: Differential drive (tank-style steering)
-- **Beta**: Torque steer dynamics (realistic car physics with acceleration and steering)
+### Beta 1.1 - Input Vector Scope (2025-12-13)
+- **New**: Real-time visualization of drive torque and steering angle with motion trail
+- **New**: Rule-Based autonomous driving achieves 2-lap goal
+- **Fix**: AI mode start signal timing resolved with async WebSocket
+- **Improve**: AI inference optimization with preload_model()
 
-### 🏆 2-Robot Racing
-- Race two robots simultaneously
-- Compete head-to-head with friends or test multiple AI algorithms
-- Each robot can run different control modes
-
-### 🌐 Global Leaderboard
-- Share your race results online
-- Compare lap times with racers worldwide
-- X (Twitter) integration for sharing achievements
-- View results at: [https://virtualrobotrace.com](https://virtualrobotrace.com)
-
-### 🎯 Input Vector Scope (v1.1)
-- Real-time visualization of drive torque and steering angle
-- Circular radar display with motion trail (afterimage effect)
-- Cyan dot for acceleration, red for braking
-- Educational value: smooth curves = good AI control, jagged = poor control
+### Beta 1.0 (2025-11-30)
+- **Fix**: Rule-based mode import path issue when launched via main.py
 
 ---
 
-## 🔍 Overview
+## Overview
 
 This guide walks you through:
 
 1. Downloading the app from GitHub
 2. Installing Python and required libraries
-3. Understanding the new multi-robot file structure
+3. Understanding the multi-robot file structure
 4. Configuring and racing your robots
 5. Sharing your results online
 
 ---
 
-## 📁 Step 1: Download the App
+## Step 1: Download the App
 
 Clone or download the repository:
 
 * GitHub: [https://github.com/AAgrandprix/virtual-robot-race](https://github.com/AAgrandprix/virtual-robot-race)
 
 ```bash
-# Clone with Git
 git clone https://github.com/AAgrandprix/virtual-robot-race.git
 ```
 
@@ -88,18 +81,18 @@ Or download ZIP and extract it.
 
 ---
 
-## 🔧 Step 2: Install Python & Libraries
+## Step 2: Install Python & Libraries
 
 ### Python Installation
 * Download and install **Python 3.12+ (64-bit)**:
   [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
-  ⚠️ **Important**: During installation, check "Add Python to PATH"
+  **Important**: During installation, check "Add Python to PATH"
 
-  > 💡 Tested with Python 3.12 and 3.13. Python 3.10/3.11 may work but are not officially supported.
+  > Tested with Python 3.12 and 3.13. Python 3.10/3.11 may work but are not officially supported.
 
 ### Quick Setup (Recommended)
-📌 **Easiest way**: Simply double-click `setup_env.bat` in the Project_Beta folder.
+Simply double-click `setup_env.bat` in the Project_Beta folder.
 
 This will automatically:
 - Create virtual environment (.venv)
@@ -121,9 +114,9 @@ If you prefer manual control or setup_env.bat doesn't work:
    pip install -r requirements.txt
    ```
 
-✅ You'll see `(.venv)` at the start of your command line when virtual environment is active.
+You'll see `(.venv)` at the start of your command line when virtual environment is active.
 
-### 🚀 GPU Acceleration (Recommended for AI Training)
+### GPU Acceleration (Recommended for AI Training)
 
 If you have an **NVIDIA GPU** and want faster AI model training, install the CUDA-enabled PyTorch:
 
@@ -143,19 +136,19 @@ python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
 
 If you see `CUDA available: True`, GPU acceleration is working!
 
-> 💡 **No GPU?** The default CPU version works fine for inference (running the AI). GPU mainly speeds up training.
+> **No GPU?** The default CPU version works fine for inference (running the AI). GPU mainly speeds up training.
 
-> ⚠️ **CUDA version**: This project uses CUDA 12.4. If you have an older GPU or driver, try `cu118` instead of `cu124`.
+> **CUDA version**: This project uses CUDA 12.4. If you have an older GPU or driver, try `cu118` instead of `cu124`.
 
 ---
 
-## 🧠 AI Model Download (Optional)
+## AI Model Download (Optional)
 
 The AI mode requires a trained model file `model.pth`.
 
-> ⚠️ This file is **not included** in the repository due to GitHub's 100MB limit.
+> This file is **not included** in the repository due to GitHub's 100MB limit.
 
-👉 [Download model.pth from Google Drive](https://drive.google.com/file/d/1NDL3A2lWDgXdy7OUWctyoR35jtYqthWD/view?usp=sharing)
+[Download model.pth from Google Drive](https://drive.google.com/file/d/1NDL3A2lWDgXdy7OUWctyoR35jtYqthWD/view?usp=sharing)
 
 After downloading, place the file in:
 
@@ -164,11 +157,11 @@ Project_Beta/Robot1/models/model.pth
 Project_Beta/Robot2/models/model.pth
 ```
 
-> 💡 You only need to download the model if you want to use AI control mode (MODE_NUM=4)
+> You only need the model if you want to use AI control mode (MODE_NUM=4).
 
 ---
 
-## 📂 Step 3: Project Structure
+## Step 3: Project Structure
 
 ```
 Project_Beta/
@@ -188,7 +181,7 @@ Project_Beta/
 │   ├── table_input.csv      # Recorded control data
 │   ├── rule_based_input.py  # Rule-based control (MODE_NUM=3)
 │   ├── inference_input.py   # AI inference engine (MODE_NUM=4)
-│   ├── ai_control_strategy.py  # AI strategy settings (hybrid/pure_e2e)
+│   ├── ai_control_strategy.py  # AI strategy settings
 │   ├── model.py             # Neural network model definition
 │   ├── train_model.py       # Model training script
 │   ├── rule_based_algorithms/
@@ -197,24 +190,15 @@ Project_Beta/
 │   │   ├── perception_Startsignal.py
 │   │   └── ...
 │   ├── data_interactive/    # Real-time data (auto-generated, gitignored)
-│   │   ├── last_run_dir.txt       # Path to most recent run
-│   │   ├── latest_RGB_a.jpg       # Current camera frame (buffer A)
-│   │   ├── latest_RGB_b.jpg       # Current camera frame (buffer B)
-│   │   ├── latest_RGB_now.txt     # Active buffer indicator (a or b)
-│   │   ├── latest_frame_name.txt  # Current frame filename
-│   │   ├── latest_SOC.txt         # Current battery state of charge
-│   │   └── latest_torque.txt      # Current drive torque value
 │   ├── models/
 │   │   └── model.pth        # AI model (download separately)
 │   └── training_data/       # Recorded runs for AI training
 │       └── run_YYYYMMDD_HHMMSS/
 │           ├── images/
 │           ├── metadata.csv
-│           ├── unity_log.txt   # Unity debug log (auto-generated)
-│           └── output_video.mp4
+│           └── unity_log.txt
 │
-├── Robot2/                  # Second robot configuration
-│   └── (same structure as Robot1)
+├── Robot2/                  # Second robot (same structure as Robot1)
 │
 └── Windows/                 # Unity executable
     ├── VirtualRobotRace_Beta.exe
@@ -223,7 +207,7 @@ Project_Beta/
 
 ---
 
-## ⚙️ Step 4: Configure Your Robots
+## Step 4: Configure Your Robots
 
 ### Global Settings (`config.txt`)
 
@@ -255,16 +239,11 @@ RACE_FLAG=1          # 1=Post results to leaderboard, 0=Practice only
 
 # Recording settings
 DATA_SAVE=1          # 1=Save CSV and images, 0=Don't save
-AUTO_MAKE_VIDEO=0    # 1=Auto-create video after race
-
-# Advanced video settings (usually no need to change)
-VIDEO_FPS=20
-INFER_FPS=1
 ```
 
 ---
 
-## ▶️ Step 5: Run the Simulator
+## Step 5: Run the Simulator
 
 ```bash
 python main.py
@@ -276,7 +255,7 @@ python main.py
 
 ---
 
-## 🎮 Control Modes
+## Control Modes
 
 ### 1. Keyboard Control (MODE_NUM=1)
 Manually drive your robot with the keyboard:
@@ -289,7 +268,7 @@ Manually drive your robot with the keyboard:
 ### 2. Table Playback (MODE_NUM=2)
 Replay pre-recorded control data from CSV files.
 
-### 3. Rule-Based  (MODE_NUM=3)
+### 3. Rule-Based (MODE_NUM=3)
 Autonomous driving using:
 - Start signal detection
 - Lane following algorithms
@@ -301,18 +280,18 @@ AI-powered control using trained PyTorch models.
 ### 5. Smartphone Controller (MODE_NUM=5)
 Use your smartphone as a wireless gamepad:
 1. Set `MODE_NUM=5` in robot_config.txt
-2. Run `python main.py` - a QR code will appear
+2. Run `python main.py` — a QR code will appear
 3. Scan the QR code with your phone
 4. Use dual virtual joysticks to control your robot
    - **Left joystick**: Throttle (up=forward, down=reverse)
    - **Right joystick**: Steering (left/right)
 5. Press both L+R buttons simultaneously to start
 
-> 💡 Your phone and PC must be on the same WiFi network
+> Your phone and PC must be on the same WiFi network.
 
 ---
 
-## 📊 Data Recording (DATA_SAVE=1)
+## Data Recording (DATA_SAVE=1)
 
 When `DATA_SAVE=1` is enabled, race data is automatically saved to the `training_data` folder.
 
@@ -322,7 +301,7 @@ Robot1/training_data/
 └── run_YYYYMMDD_HHMMSS/
     ├── images/              # Camera RGB images (JPEG)
     ├── metadata.csv         # Telemetry data
-    └── unity_log.txt   　   # Unity debug log (auto-generated)
+    └── unity_log.txt        # Unity debug log (auto-generated)
 ```
 
 ### metadata.csv Columns
@@ -330,27 +309,64 @@ Robot1/training_data/
 | Column | Description |
 |--------|-------------|
 | `id` | Tick ID for system tracking (1 tick = 50ms) |
-| `session_time` | Game system internal timer |
-| `race_time` | Time elapsed since start signal turned GO |
+| `session_time_ms` | Game system internal timer (milliseconds) |
+| `race_time_ms` | Time elapsed since start signal turned GO (milliseconds) |
 | `filename` | Image filename linked to this tick (for training) |
-| `soc` | Robot battery State of Charge (%) |
+| `soc` | Robot battery State of Charge (0.0 to 1.0) |
 | `drive_torque` | Drive torque command value sent to robot |
-| `steer` | Steering angle command value (radians, positive=right, negative=left) |
-| `status` | Race status: `StartSequence`, `Lap0`/`Lap1`/`Lap2`/`Lap3`, `Finish`, `Fallen`, `FalseStart`, `BatteryDepleted`, `ForceEnd` |
+| `steer_angle` | Steering angle command (radians, positive=right, negative=left) |
+| `status` | Race status: `StartSequence`, `Lap0`-`Lap3`, `Finish`, `Fallen`, `FalseStart`, `BatteryDepleted`, `ForceEnd` |
 | `pos_z` | Position in forward direction (meters) |
 | `pos_x` | Position in lateral direction (meters) |
-| `yaw` | Heading angle: 0° at start, positive=right, negative=left (degrees) |
+| `yaw` | Heading angle: 0 at start, positive=right, negative=left (degrees) |
 | `pos_y` | Position in vertical direction (meters) |
 | `error_code` | Error code (currently dummy value: 999) |
+| `collision_type` | Collision type: `wall`, `robot`, `both`, or empty (Beta 1.5) |
+| `collision_penalty` | SOC penalty applied this frame: 0.0-1.0 (Beta 1.5) |
+| `collision_target` | Collision target: `Wall`, `Robot1`, `Robot2`, etc. (Beta 1.5) |
 
 ### Usage
 - **AI Training**: Use `images/` and `metadata.csv` to train neural network models
+- **Offline RL**: Use collision and telemetry data for reward-based learning (Beta 1.4+)
 - **Analysis**: Review driving behavior and optimize control algorithms
 - **Replay**: Use metadata for table playback mode (MODE_NUM=2)
 
 ---
 
-## 🏁 Racing Scenarios
+## Collision Penalty System (Beta 1.5)
+
+Collisions drain the robot's battery (SOC) proportional to impact energy, teaching AI models to avoid crashes.
+
+### How It Works
+
+```
+Penalty = k * E * R
+
+k = basePenaltyRate / maxSpeed^2    (normalization factor)
+E = |velocity|^2  or  |V_rel|^2     (collision energy)
+R = responsibility ratio             (0.0 to 1.0)
+```
+
+| Collision Type | Energy (E) | Responsibility (R) |
+|----------------|------------|---------------------|
+| Wall | Own speed squared | 1.0 (always 100%) |
+| Robot-to-Robot | Relative speed squared | 0.5 + 0.5 * dot(V, -normal) |
+
+**Default parameters**: basePenaltyRate=0.20, maxSpeed=5.0 m/s, cooldown=1.0s
+
+**Example**: Hitting a wall at 3.0 m/s -> E=9.0, penalty = 0.008 * 9.0 * 1.0 = 7.2% SOC loss
+
+### Data Output
+Collision data is logged per-frame in metadata.csv:
+```csv
+id,...,collision_type,collision_penalty,collision_target
+267,...,wall,0.0149,Wall
+380,...,robot,0.0035,Robot2
+```
+
+---
+
+## Racing Scenarios
 
 ### Solo Practice
 ```ini
@@ -380,11 +396,11 @@ RACE_FLAG=0   # Don't post AI result
 
 ### Algorithm Competition
 ```ini
-# Compare two different AI approaches
+# Compare two different approaches
 ACTIVE_ROBOTS=1,2
 
 # Robot1/robot_config.txt
-MODE_NUM=3    # Rule-based 
+MODE_NUM=3    # Rule-based
 NAME=RuleBot
 
 # Robot2/robot_config.txt
@@ -394,7 +410,7 @@ NAME=NeuralBot
 
 ---
 
-## 🌐 Sharing Your Results
+## Sharing Your Results
 
 After completing a race with `RACE_FLAG=1`:
 
@@ -403,54 +419,49 @@ After completing a race with `RACE_FLAG=1`:
 3. Share your achievement on X (Twitter)
 4. Challenge other racers to beat your time!
 
-> 💡 Tip: Set `RACE_FLAG=0` during practice to avoid posting incomplete runs
+> Tip: Set `RACE_FLAG=0` during practice to avoid posting incomplete runs.
 
 ---
 
-## 📊 Verified Test Environments
+## Verified Test Environments
 
-| Device           | CPU                           | GPU                            | RAM      | Status          |
-| ---------------- | ----------------------------- | ------------------------------ | -------- | --------------- |
-| Dev PC           | 12th Gen Intel Core i5-12450H | NVIDIA GeForce RTX 3060 Laptop | 16.00 GB | ✅ Smooth        |
-| Surface Laptop 2 | 8th Gen Intel Core i5         | Intel UHD Graphics 620         | 8GB      | ✅ Works (AI OK) |
-
----
-
-## 📊 Recommended Specs
+| Device | CPU | GPU | RAM | Status |
+|--------|-----|-----|-----|--------|
+| Dev PC | 12th Gen Intel Core i5-12450H | NVIDIA GeForce RTX 3060 Laptop | 16.00 GB | Smooth |
+| Surface Laptop 2 | 8th Gen Intel Core i5 | Intel UHD Graphics 620 | 8GB | Works (AI OK) |
 
 This Beta version is verified on **Windows 11**.
-
-If you're using a different setup and it works, we'd love to hear your specs!
-Please share your test results with us via Discord or GitHub Issues. 😊
-
-> ⚠️ Mac/Linux support is not yet available
+Mac/Linux support is not yet available.
 
 ---
 
-## 🎯 Tips for Better Racing
+## Beta vs Alpha Comparison
+
+| Feature | Alpha | Beta |
+|---------|-------|------|
+| Drive System | Differential (Tank) | Torque Steer (Car) |
+| Robots | 1 Robot | 2 Robots |
+| Multiplayer | No | Yes (Head-to-head) |
+| Leaderboard | No | Yes (Global online) |
+| Control Modes | 4 modes | 5 modes |
+| Battery / SOC | No | Yes |
+| Collision Penalty | No | Yes (SOC-based) |
+| Offline RL | No | Yes (DAgger+, AWR) |
+| Physics | Basic | Realistic car dynamics |
+
+---
+
+## Tips for Better Racing
 
 - **Practice first**: Use `RACE_FLAG=0` to learn the track
 - **Watch replays**: Create videos with `AUTO_MAKE_VIDEO=1` to analyze your driving
 - **Tune your AI**: Training data is saved in `Robot*/training_data/`
 - **Compare modes**: Race different control methods against each other
+- **Monitor battery**: Collisions drain SOC — smooth driving preserves energy
 
 ---
 
-## 🆚 Beta vs Alpha Comparison
-
-| Feature          | Alpha               | Beta                    |
-| ---------------- | ------------------- | ----------------------- |
-| Drive System     | Differential (Tank) | Torque Steer (Car)      |
-| Robots           | 1 Robot             | 2 Robots                |
-| Multiplayer      | ❌                   | ✅ Head-to-head          |
-| Leaderboard      | ❌                   | ✅ Global online         |
-| Control Modes    | 4 modes             | 4 modes (same)          |
-| Configuration    | Single config file  | Per-robot config        |
-| Physics          | Basic               | Realistic car dynamics  |
-
----
-
-## 😊 Community & Support
+## Community & Support
 
 * YouTube: https://www.youtube.com/@RaceYourAlgo
 * Official Website: [https://virtualrobotrace.com](https://virtualrobotrace.com)
@@ -458,11 +469,11 @@ Please share your test results with us via Discord or GitHub Issues. 😊
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Unity won't launch
 - Set `DEBUG_MODE=1` in config.txt and launch Unity manually
-- Check that `Windows/Unity_Build.exe` exists
+- Check that `Windows/VirtualRobotRace_Beta.exe` exists
 
 ### Robot doesn't move
 - Verify `ACTIVE_ROBOTS` includes your robot number
@@ -481,29 +492,4 @@ Please share your test results with us via Discord or GitHub Issues. 😊
 
 ---
 
-## Changelog
-
-### v1.3 (2026-01-11)
-- **New**: Smartphone controller mode (MODE_NUM=5) with dual joysticks and camera feed
-- **New**: PanelManager for dynamic camera panel layout based on active robot count
-- **Improve**: InputVectorScope anti-aliased rendering for smoother visuals
-- **Refactor**: Robot visibility management consolidated in GameManager
-
-### v1.2 (2026-01-10)
-- **Fix**: Training data integrity - image filenames now align correctly with metadata.csv
-- **New**: Data correction tool (`scripts/data_manager_post.py`)
-
-### v1.1 (2025-12-13)
-- **New**: Input Vector Scope UI - real-time visualization of drive/steer inputs with motion trail
-- **New**: Rule-Based autonomous driving achieves 2-lap goal
-- **Fix**: AI mode start signal timing delay resolved with async WebSocket
-- **Improve**: AI inference optimization with preload_model() for faster startup
-- **Refactor**: Renamed config.py to config_loader.py to prevent user confusion
-
-### v1.0 (2025-11-30)
-- **Fix**: Rule-based mode (MODE_NUM=3) now works correctly when launched via `main.py`
-  - Fixed module import path issue for `rule_based_algorithms` in Robot1/Robot2
-
----
-
-Race your Algorithm. Challenge the World. ✨
+Race your Algorithm. Challenge the World.

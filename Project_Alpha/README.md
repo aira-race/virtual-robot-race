@@ -1,15 +1,17 @@
-# 🌟 Virtual Robot Race - Alpha Version
+# Virtual Robot Race - Alpha Version
 
-### 🧠 Build and Race Your Own AI!
+### Build and Race Your Own AI!
 
 Welcome to the **Alpha version** of Virtual Robot Race!
-This guide helps you set up the race simulator on your Windows PC (Windows 11 only) and control your robot using Python.
+This guide helps you set up the race simulator on your Windows PC and control your robot using Python.
 
 You can manually drive the robot, replay pre-recorded torque data, or try rule-based and AI-controlled driving.
 
+> **Note**: The Alpha version uses differential drive (tank-style steering). For the latest version with realistic car physics, 2-robot racing, and more features, see [Project_Beta](../Project_Beta/README.md).
+
 ---
 
-## 🔍 Overview
+## Overview
 
 This guide walks you through:
 
@@ -20,14 +22,13 @@ This guide walks you through:
 
 ---
 
-## 📁 Step 1: Download the App
+## Step 1: Download the App
 
 Clone or download the repository:
 
 * GitHub: [https://github.com/AAgrandprix/virtual-robot-race](https://github.com/AAgrandprix/virtual-robot-race)
 
 ```bash
-# Clone with Git
 git clone https://github.com/AAgrandprix/virtual-robot-race.git
 ```
 
@@ -35,38 +36,34 @@ Or download ZIP and extract it.
 
 ---
 
-## 🔧 Step 2: Install Python & Libraries
+## Step 2: Install Python & Libraries
 
-* Download and install **Python 3.10 (64-bit)**:
-  [https://www.python.org/downloads/release/python-3100/](https://www.python.org/downloads/release/python-3100/)
+* Download and install **Python 3.10+ (64-bit)**:
+  [https://www.python.org/downloads/](https://www.python.org/downloads/)
+
+  **Important**: During installation, check "Add Python to PATH"
 
 * Open Command Prompt or Terminal:
 
 ```bash
-# Move to the project directory
-cd project
+cd Project_Alpha
 
-# Create virtual environment
 python -m venv .venv
-
-# Activate virtual environment
 .venv\Scripts\activate
-
-# Install required packages
 pip install -r requirements.txt
 ```
 
 ---
 
-## 🧠 AI Model Download
+## AI Model Download
 
 The AI mode requires a trained model file `model.pth`.
 
-> ⚠️ This file is **not included** in the repository due to GitHub’s 100MB limit.
+> This file is **not included** in the repository due to GitHub's 100MB limit.
 
-👉 [Download model.pth from Google Drive](https://drive.google.com/file/d/19qWtxAC1ABYiK1CGDg9A0PDX67u39I_v/view?usp=sharing)
+[Download model.pth from Google Drive](https://drive.google.com/file/d/19qWtxAC1ABYiK1CGDg9A0PDX67u39I_v/view?usp=sharing)
 
-After downloading, place the file in this path:
+After downloading, place the file in:
 
 ```
 Project_Alpha/models/model.pth
@@ -76,12 +73,12 @@ Make sure the filename is exactly `model.pth`.
 
 ---
 
-## 📂 Step 3: Project Structure
+## Step 3: Project Structure
 
 ```
-project/
-├── setup_env.bat 
-├── requirements.txt 
+Project_Alpha/
+├── setup_env.bat
+├── requirements.txt
 ├── main.py
 ├── websocket_server.py
 ├── config.py
@@ -102,22 +99,15 @@ project/
 │   └── status_Robot.py
 ├── inference_input.py
 ├── models/
-│   └── model.pth   <download from Google Drive>
+│   └── model.pth   # Download from Google Drive
 ├── make_video.py
 ├── data_manager.py
 ├── Windows/
 │   ├── AAgp_test32.exe
-│   ├── runtime_log.txt
-│   ├── UnityCrashHandler64.exe
-│   ├── UnityPlayer.dll
-│   ├── AAgp_test32_Data/
-│   └── MonoBleedingEdge/
+│   └── ...
 └── training_data/
     └── run_YYYYMMDD_HHMMSS/
         ├── images/
-        │   ├── frame_00001.jpg
-        │   ├── frame_00002.jpg
-        │   └── ...
         ├── metadata.csv
         ├── table_input.csv
         └── UnityLog.txt
@@ -125,7 +115,7 @@ project/
 
 ---
 
-## ▶️ Step 4: Run the Simulator
+## Step 4: Run the Simulator
 
 ```bash
 python main.py
@@ -136,7 +126,7 @@ python main.py
 
 ---
 
-## 📲 Choose Your Control Mode
+## Choose Your Control Mode
 
 Edit `config.txt` to set your control method:
 
@@ -150,30 +140,24 @@ MODE_NUM=1
 
 ---
 
-## 📊 Verified Test Environments
+## Verified Test Environments
 
-| Device           | CPU                           | GPU                            | RAM      | Status          |
-| ---------------- | ----------------------------- | ------------------------------ | -------- | --------------- |
-| Dev PC           | 12th Gen Intel Core i5-12450H | NVIDIA GeForce RTX 3060 Laptop | 16.00 GB | ✅ Smooth        |
-| Surface Laptop 2 | 8th Gen Intel Core i5         | Intel UHD Graphics 620         | 8GB      | ✅ Works (AI OK) |
+| Device | CPU | GPU | RAM | Status |
+|--------|-----|-----|-----|--------|
+| Dev PC | 12th Gen Intel Core i5-12450H | NVIDIA GeForce RTX 3060 Laptop | 16.00 GB | Smooth |
+| Surface Laptop 2 | 8th Gen Intel Core i5 | Intel UHD Graphics 620 | 8GB | Works (AI OK) |
 
----
-
-## 📊 Recommended Specs
-
-This Alpha version is verified on Windows 11.
-
-If you’re using a different setup and it works, we’d love to hear your specs!
-Please share your test results with us via Discord or GitHub Issues. 😊. Mac/Linux not yet available.\*
+This Alpha version is verified on **Windows 11**.
+Mac/Linux support is not yet available.
 
 ---
 
-## 😊 Community & Support
+## Community & Support
 
-* Discord: [https://discord.gg/BCTd2ctq](https://discord.gg/BCTd2ctq)
+* YouTube: https://www.youtube.com/@RaceYourAlgo
 * Official Website: [https://virtualrobotrace.com](https://virtualrobotrace.com)
+* GitHub Issues: [https://github.com/AAgrandprix/virtual-robot-race/issues](https://github.com/AAgrandprix/virtual-robot-race/issues)
 
 ---
 
-Race your Algorithm. ✨
-
+Race your Algorithm. Challenge the World.
