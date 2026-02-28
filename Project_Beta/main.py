@@ -18,6 +18,8 @@ from pathlib import Path
 import pandas as pd
 import shutil
 
+sys.path.insert(0, str(Path(__file__).parent / "scripts"))
+
 import config_loader
 from websocket_client import RobotWebSocketClient
 import data_manager as dm

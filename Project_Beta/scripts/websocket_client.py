@@ -27,7 +27,7 @@ class RobotWebSocketClient:
         self.data_manager = None
         if self.robot_config.get('DATA_SAVE', 0) == 1:
             from pathlib import Path
-            base_dir = Path(__file__).parent
+            base_dir = Path(__file__).parent.parent
             self.data_manager = data_manager.DataManager(base_dir, robot_id=robot_id)
             self.data_manager.start_new_run()
             print(f"[{self.robot_id}] DataManager initialized for image saving")

@@ -34,7 +34,7 @@ def register_terminal_log_getter(getter_func: Callable[[], str]) -> None:
 if getattr(sys, "frozen", False):
     BASE_DIR = Path(os.path.dirname(sys.executable))
 else:
-    BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+    BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).parent
 
 # -------------------------
 # Interactive artifacts (Robot-specific paths)

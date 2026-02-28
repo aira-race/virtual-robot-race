@@ -22,7 +22,7 @@ import argparse
 class ReleasePreparation:
     def __init__(self, dry_run=True):
         self.dry_run = dry_run
-        self.project_root = Path(__file__).parent
+        self.project_root = Path(__file__).parent.parent
         self.actions = []
 
     def log(self, action, path, extra=""):
