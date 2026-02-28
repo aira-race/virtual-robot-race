@@ -26,7 +26,7 @@ from datetime import datetime
 # PathSettings
 # ===========================
 SCRIPT_DIR = Path(__file__).parent
-PROJECT_ROOT = SCRIPT_DIR.parent.parent  # Project_Beta/
+PROJECT_ROOT = SCRIPT_DIR.parent.parent  # repo root
 ROBOT1_ROOT = PROJECT_ROOT / "Robot1"
 LOCAL_TRAINING_DATA = ROBOT1_ROOT / "training_data"
 

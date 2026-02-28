@@ -24,7 +24,7 @@ MODULE_SOURCE = "Robot2"
 print(f"[inference_input] Loaded from {MODULE_SOURCE}/")
 
 # Import data_manager from parent directory
-sys.path.insert(0, str(Path(__file__).parent.parent))  # Add Project_Beta to path
+sys.path.insert(0, str(Path(__file__).parent.parent))  # Add repo root to path
 import data_manager
 
 # Get the directory of this file (Robot2/)

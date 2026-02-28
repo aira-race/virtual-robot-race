@@ -1,4 +1,4 @@
-# rule_based_input.py (Robot2 version - New Architecture)
+# rule_based_input.py (Robot1 version - New Architecture)
 # Rule-based driving using sliding window lane detection and driver model
 # Compatible with Unity Server + Python Client architecture
 
@@ -10,13 +10,13 @@ from pathlib import Path
 from PIL import Image
 
 # Module identification
-MODULE_SOURCE = "Robot2"
+MODULE_SOURCE = "Robot1"
 print(f"[rule_based_input] Loaded from {MODULE_SOURCE}/")
 
-# Import data_manager functions for Robot2
+# Import data_manager functions for Robot1
 _this_dir = Path(__file__).parent
-sys.path.insert(0, str(_this_dir.parent))  # Add Project_Beta to path
-sys.path.insert(0, str(_this_dir))  # Add Robot2 to path (for rule_based_algorithms)
+sys.path.insert(0, str(_this_dir.parent))  # Add repo root to path
+sys.path.insert(0, str(_this_dir))  # Add Robot1 to path (for rule_based_algorithms)
 import data_manager
 
 # Import rule-based algorithms
@@ -39,7 +39,7 @@ from rule_based_algorithms.debug_utils import annotate_and_save_canvas
 from rule_based_algorithms.debug_utils import overlay_and_save as overlay_and_save_fallback
 
 # --- Globals (control output) ---
-robot_id = "R2"
+robot_id = "R1"
 driveTorque: float = 0.0
 steerAngle: float = 0.0
 
