@@ -180,7 +180,10 @@ Finally, configure `Visual Studio Code`.
 2.  **Install recommended extensions**
     - Search for and install the following extensions in the VS Code extensions marketplace:
       - **Python** (by Microsoft): Essential tool for Python development.
-      - **Gemini Code Assist** (by Google Cloud): AI-powered coding assistance. You will use this in the latter half of the training. (Sign in with your Google account.)
+      - **Gemini Code Assist** (by Google Cloud): AI-powered coding assistance. You will use this in the latter half of the lessons. (Sign in with your Google account.)
+      - **Markdown Preview Enhanced** (by shd101wyy): Makes reading these lesson documents much easier. With a `.md` file open, press `Ctrl + Shift + V` to open the preview — **a copy button will appear in the top-right corner of every code block.**
+
+    > **💡 Pasting into the terminal**: In the VS Code terminal, simply **right-click** to paste — no need for `Ctrl+V`.
 
 3.  **Select the Python interpreter**
     - Open the command palette with `Ctrl + Shift + P`, then type `Python: Select Interpreter`.
