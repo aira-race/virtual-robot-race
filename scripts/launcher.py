@@ -10,21 +10,22 @@ from tkinter import messagebox
 import re
 from pathlib import Path
 
-# ── Color palette ─────────────────────────────────────────────────────────────
-BG      = "#0d0d0d"   # Window background
-SURFACE = "#161616"   # Card / input background
-BORDER  = "#272727"   # Subtle borders
-ACCENT  = "#4fc3f7"   # Primary (light blue)
-TEXT    = "#e0e0e0"   # Primary text
-MUTED   = "#555555"   # Labels / secondary text
-ON_BG   = "#0d2a1a"   # Toggle ON  background (dark green)
-ON_FG   = "#4caf50"   # Toggle ON  foreground
-OFF_FG  = "#444444"   # Toggle OFF foreground
+# ── Color palette (aira brand) ────────────────────────────────────────────────
+BG      = "#080C14"   # Deep Navy — window background
+SURFACE = "#0D1420"   # Panel / input background
+BORDER  = "#1A2540"   # Borders / dividers
+ACCENT  = "#00D4FF"   # Electric Cyan — START button, logo
+AMBER   = "#FF8C00"   # Amber — section labels, version, top line
+TEXT    = "#E8EEF8"   # Primary text (values)
+MUTED   = "#4A5878"   # Secondary text (labels)
+ON_BG   = "#001F2D"   # Toggle ON background
+ON_FG   = "#00D4FF"   # Toggle ON foreground (Cyan)
+OFF_FG  = "#4A5878"   # Toggle OFF foreground (Muted)
 
-FONT_UI   = ("Segoe UI", 9)
-FONT_BOLD = ("Segoe UI", 10, "bold")
-FONT_MONO = ("Consolas", 10)
-FONT_TITLE= ("Segoe UI", 15, "bold")
+FONT_UI   = ("Courier", 9)
+FONT_BOLD = ("Courier", 10, "bold")
+FONT_MONO = ("Courier", 10)
+FONT_TITLE= ("Courier", 16, "bold")
 
 MODE_OPTIONS = ["keyboard", "table", "rule_based", "ai", "smartphone"]
 MODE_TO_NUM  = {"keyboard": "1", "table": "2", "rule_based": "3",
@@ -85,9 +86,8 @@ def _dropdown(parent, var, options) -> tk.Frame:
 
 
 def _section(parent, label: str) -> None:
-    tk.Label(parent, text=label, bg=BG, fg=MUTED,
-             font=("Segoe UI", 8), anchor="w").pack(fill="x", padx=24, pady=(16, 2))
-    tk.Frame(parent, bg=BORDER, height=1).pack(fill="x", padx=24)
+    tk.Label(parent, text=label, bg=BG, fg=AMBER,
+             font=("Courier", 8), anchor="w").pack(fill="x", padx=24, pady=(16, 2))
 
 
 def _row(parent, label: str, widget_fn) -> None:
@@ -139,12 +139,15 @@ def show_launcher() -> bool:
     y = (root.winfo_screenheight() - H) // 2
     root.geometry(f"{W}x{H}+{x}+{y}")
 
+    # ── Amber accent line (top) ────────────────────────────────
+    tk.Frame(root, bg=AMBER, height=2).pack(fill="x")
+
     # ── Title bar ─────────────────────────────────────────────
-    title_bar = tk.Frame(root, bg=SURFACE)
+    title_bar = tk.Frame(root, bg=BG)
     title_bar.pack(fill="x")
-    tk.Label(title_bar, text="VRR", bg=SURFACE, fg=ACCENT,
+    tk.Label(title_bar, text="aira", bg=BG, fg=ACCENT,
              font=FONT_TITLE, padx=24, pady=12, anchor="w").pack(side="left")
-    tk.Label(title_bar, text="Beta 1.7", bg=SURFACE, fg=MUTED,
+    tk.Label(title_bar, text="Beta 1.7", bg=BG, fg=AMBER,
              font=FONT_UI, padx=24).pack(side="right", anchor="s", pady=14)
 
     # ── Player ────────────────────────────────────────────────
@@ -231,16 +234,16 @@ def show_launcher() -> bool:
 
     tk.Button(
         btn_frame, text="QUIT", command=on_quit,
-        bg=SURFACE, fg=MUTED, relief="flat", font=FONT_UI,
+        bg=BORDER, fg=MUTED, relief="flat", font=FONT_UI,
         padx=20, pady=8, cursor="hand2",
         activebackground=BORDER, activeforeground=TEXT,
     ).pack(side="left")
 
     tk.Button(
         btn_frame, text="START", command=on_start,
-        bg=ACCENT, fg="#000000", relief="flat", font=FONT_BOLD,
+        bg=ACCENT, fg=BG, relief="flat", font=FONT_BOLD,
         padx=28, pady=8, cursor="hand2",
-        activebackground="#81d4fa", activeforeground="#000000",
+        activebackground="#66E8FF", activeforeground=BG,
     ).pack(side="right")
 
     root.mainloop()
