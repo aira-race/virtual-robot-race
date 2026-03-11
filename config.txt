@@ -1,21 +1,63 @@
-# Virtual Robot Race Beta Configuration File (config.txt)
-# Global settings - which robots to activate
+# ============================================================
+# Virtual Robot Race - Configuration File (Beta 1.7)
+# ============================================================
 
-# Hostname or IP address where Unity will connect
+# ===== Player =====
+
+# Player name: alphanumeric, up to 16 characters
+NAME=Player0000
+
+# Competition name: must match a valid competition ID registered on the platform
+COMP_NAME=RACE_XXXX
+
+# ===== Network =====
+
+# Hostname or IP address where Unity is running
 HOST=localhost
 
 # WebSocket port number
 PORT=12346
 
-# Active robots (comma-separated: 1,2)
-# Beta version supports up to 2 robots maximum
+# ===== System =====
+
+# Active robots (comma-separated)
 # Example: ACTIVE_ROBOTS=1      → Robot1 only
-# Example: ACTIVE_ROBOTS=1,2    → Robot1, Robot2
+# Example: ACTIVE_ROBOTS=1,2    → Robot1 and Robot2
 ACTIVE_ROBOTS=1,2
 
-# Per-robot settings are managed in Robot1/robot_config.txt, Robot2/robot_config.txt, etc.
+# Headless mode:
+# 0 = Show launcher GUI/CLI before starting (recommended)
+# 1 = Read config and start immediately (for automated/training loops)
+HEADLESS=0
 
-# Unity launch mode (advanced setting):
-# 0 = Auto-launch Unity (recommended)
-# 1 = Manual launch (for debugging)
+# Debug mode (advanced):
+# 0 = Auto-launch Unity executable (recommended)
+# 1 = Manual Unity launch (for Unity Editor / debugging)
 DEBUG_MODE=0
+
+# ===== Data & Race =====
+
+# Save run data (images + CSV + video):
+# 1 = Save data for active robots
+# 0 = Do not save (faster, less disk usage)
+DATA_SAVE=0
+
+# Race participation flag:
+# 1 = Submit result to leaderboard
+# 0 = Test run only (no submission)
+RACE_FLAG=0
+
+# Post to X (Twitter) on race completion:
+# 1 = Post result to X
+# 0 = Do not post
+X_POST_FLAG=0
+
+# ===== Robot Modes =====
+# Control mode per robot:
+# 1 = keyboard
+# 2 = table (CSV playback)
+# 3 = rule_based (autonomous lane following)
+# 4 = ai (neural network inference)
+# 5 = smartphone (controller via QR code)
+R1_MODE_NUM=3
+R2_MODE_NUM=4

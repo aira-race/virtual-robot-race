@@ -5,7 +5,7 @@
 #  - RobotWebSocketClient (Python Client)
 #  - Input pipeline (keyboard / table / rule_based / AI)
 #  - Post-race video build (MP4)
-# Multi-robot support: Loads settings from Robot{N}/robot_config.txt and uses Robot{N}/ modules
+# Multi-robot support: Loads settings from config.txt (unified, Beta 1.7+) and uses Robot{N}/ modules
 
 import asyncio
 import threading

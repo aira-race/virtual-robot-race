@@ -52,8 +52,9 @@ class RobotWebSocketClient:
             "type": "connection",
             "robot_id": self.robot_id,
             "message": "Hello from Python client",
-            # Robot identity (for race results posting)
+            # Robot identity (validated by Unity via GAS/Firebase)
             "player_name": self.robot_config.get("NAME", "Player0000"),
+            "comp_name": self.robot_config.get("COMP_NAME", ""),
             "mode": self._get_mode_string(),
             "race_flag": self.robot_config.get("RACE_FLAG", 0)
         }
@@ -83,7 +84,7 @@ class RobotWebSocketClient:
     def _get_mode_string(self) -> str:
         """Convert MODE_NUM to mode string"""
         mode_num = self.robot_config.get("MODE_NUM", 1)
-        mode_map = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai"}
+        mode_map = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai", 5: "smartphone", 6: "rl_training"}
         return mode_map.get(mode_num, "keyboard")
 
     async def send_json(self, data: dict):
