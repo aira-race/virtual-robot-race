@@ -988,6 +988,15 @@ async def _drain_all_tasks() -> None:
 
 
 if __name__ == "__main__":
+    # Show GUI launcher when HEADLESS=0 (allows editing config before race start)
+    if config_loader.HEADLESS == 0:
+        from launcher import show_launcher
+        if not show_launcher():
+            print("[Main] Launch cancelled.")
+            sys.exit(0)
+        # Reload config after launcher may have written changes
+        config_loader.apply_config()
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
