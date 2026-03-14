@@ -212,10 +212,10 @@ def show_launcher() -> bool:
 
     def on_start():
         name = name_var.get().strip()
-        if not re.fullmatch(r"[A-Za-z0-9]{1,16}", name):
+        if not re.fullmatch(r"[A-Za-z0-9_]{1,16}", name):
             messagebox.showerror(
                 "Invalid Name",
-                "Name must be 1–16 alphanumeric characters (A-Z, a-z, 0-9).",
+                "Name must be 1–16 characters: A-Z, a-z, 0-9, or _ (underscore).",
                 parent=root,
             )
             return

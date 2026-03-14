@@ -108,12 +108,12 @@ def load_config() -> None:
 
 def validate_name(name: str) -> str:
     """
-    Validate NAME: alphanumeric only, 1-16 characters.
+    Validate NAME: alphanumeric and underscore, 1-16 characters.
     Returns the name if valid, or the default if not.
     """
-    if re.fullmatch(r"[A-Za-z0-9]{1,16}", name or ""):
+    if re.fullmatch(r"[A-Za-z0-9_]{1,16}", name or ""):
         return name
-    print(f"[Config] WARNING: Invalid NAME='{name}'. Must be 1-16 alphanumeric characters. Using default.")
+    print(f"[Config] WARNING: Invalid NAME='{name}'. Must be 1-16 alphanumeric characters or underscores. Using default.")
     return DEFAULT_CONFIG["NAME"]
 
 

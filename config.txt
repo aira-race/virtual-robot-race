@@ -4,7 +4,7 @@
 
 # ===== Player =====
 
-# Player name: alphanumeric, up to 16 characters
+# Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
 NAME=Player0000
 
 # Competition name: must match a valid competition ID registered on the platform
