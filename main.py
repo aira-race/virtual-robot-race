@@ -80,7 +80,7 @@ robot_clients: dict[str, RobotWebSocketClient] = {}
 def launch_unity_exe() -> Optional[subprocess.Popen]:
     """Launch the built Unity executable if it exists."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    exe_path = os.path.join(base_dir, "Windows", "VirtualRobotRace_Beta.exe")
+    exe_path = os.path.join(base_dir, "Windows", "aira_Beta_1.7.exe")
 
     if os.path.exists(exe_path):
         print(f"[Main] Launching Unity server: {exe_path}")
