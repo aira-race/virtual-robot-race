@@ -679,7 +679,7 @@ async def main() -> None:
                 rc['KEYBOARD_DISABLED'] = True
 
     # Check: keyboard mode is not allowed in competition mode
-    comp_name = config_loader.COMP_NAME.strip()
+    comp_name = config_loader.COMPETITION_NAME.strip()
     race_flag = config_loader.RACE_FLAG
     is_comp_mode = (race_flag == 1 and comp_name not in ("", "Tutorial"))
     if keyboard_robot is not None and is_comp_mode:
@@ -688,7 +688,7 @@ async def main() -> None:
         print("[Main]  ERROR: Invalid configuration")
         print("[Main] ------------------------------------------------------------")
         print(f"[Main]  Robot{keyboard_robot} is set to KEYBOARD mode,")
-        print(f"[Main]  but RACE_FLAG=1 and COMP_NAME='{comp_name}' (competition mode).")
+        print(f"[Main]  but RACE_FLAG=1 and COMPETITION_NAME='{comp_name}' (competition mode).")
         print("[Main]  Keyboard mode cannot participate in competitions.")
         print("[Main]  → Change R{}_MODE_NUM to a non-keyboard mode,".format(keyboard_robot))
         print("[Main]    or set RACE_FLAG=0 to run as a test.")

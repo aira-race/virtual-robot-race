@@ -153,7 +153,7 @@ def show_launcher() -> bool:
     # ── Player ────────────────────────────────────────────────
     _section(root, "PLAYER")
     name_var = tk.StringVar(value=cfg.get("NAME", "Player0000"))
-    comp_var = tk.StringVar(value=cfg.get("COMP_NAME", "RACE_XXXX"))
+    comp_var = tk.StringVar(value=cfg.get("COMPETITION_NAME", "RACE_XXXX"))
     _row(root, "Name",        lambda p: _entry(p, name_var))
     _row(root, "Competition", lambda p: _entry(p, comp_var))
 
@@ -231,14 +231,14 @@ def show_launcher() -> bool:
             messagebox.showerror(
                 "Invalid Configuration",
                 f"{', '.join(keyboard_robots)} is set to Keyboard mode,\n"
-                f"but COMP_NAME='{comp}' (competition mode).\n\n"
+                f"but COMPETITION_NAME='{comp}' (competition mode).\n\n"
                 "Keyboard mode cannot participate in competitions.\n"
                 "Change the mode, or set Race Flag to OFF.",
                 parent=root,
             )
             return
         _write_config_value("NAME",          name)
-        _write_config_value("COMP_NAME",     comp_var.get().strip())
+        _write_config_value("COMPETITION_NAME",     comp_var.get().strip())
         _write_config_value("ACTIVE_ROBOTS", active_var.get())
         _write_config_value("R1_MODE_NUM",   MODE_TO_NUM[r1_var.get()])
         _write_config_value("R2_MODE_NUM",   MODE_TO_NUM[r2_var.get()])

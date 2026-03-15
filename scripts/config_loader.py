@@ -26,7 +26,7 @@ CONFIG_PATH = "config.txt"
 DEFAULT_CONFIG = {
     # Player
     "NAME":         "Player0000",   # Player name (alphanumeric, up to 16 chars)
-    "COMP_NAME":    "RACE_XXXX",    # Competition name (validated by Unity via GAS)
+    "COMPETITION_NAME":    "Tutorial",      # Competition name (Tutorial = tutorial mode)
     # Network
     "HOST":         "localhost",
     "PORT":         12346,
@@ -133,7 +133,7 @@ def _build_robot_config(robot_num: int) -> dict:
     robot_config = {
         "ROBOT_ID":     robot_id,
         "NAME":         validate_name(CONFIG.get("NAME", DEFAULT_CONFIG["NAME"])),
-        "COMP_NAME":    CONFIG.get("COMP_NAME", DEFAULT_CONFIG["COMP_NAME"]),
+        "COMPETITION_NAME":    CONFIG.get("COMPETITION_NAME", DEFAULT_CONFIG["COMPETITION_NAME"]),
         "MODE_NUM":     mode_num,
         "DATA_SAVE":    data_save,
         "RACE_FLAG":    CONFIG.get("RACE_FLAG", 0),
@@ -156,7 +156,7 @@ def apply_config() -> None:
     Called automatically at import time.
     """
     global HOST, PORT, ACTIVE_ROBOTS, HEADLESS, DEBUG_MODE
-    global NAME, COMP_NAME, DATA_SAVE, RACE_FLAG, X_POST_FLAG
+    global NAME, COMPETITION_NAME, DATA_SAVE, RACE_FLAG, X_POST_FLAG
 
     load_config()
 
@@ -165,7 +165,7 @@ def apply_config() -> None:
     HEADLESS    = CONFIG["HEADLESS"]
     DEBUG_MODE  = CONFIG["DEBUG_MODE"]
     NAME        = validate_name(CONFIG["NAME"])
-    COMP_NAME   = CONFIG["COMP_NAME"]
+    COMPETITION_NAME   = CONFIG["COMPETITION_NAME"]
     DATA_SAVE   = CONFIG["DATA_SAVE"]
     RACE_FLAG   = CONFIG["RACE_FLAG"]
     X_POST_FLAG = CONFIG["X_POST_FLAG"]

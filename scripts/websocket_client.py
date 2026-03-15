@@ -54,7 +54,7 @@ class RobotWebSocketClient:
             "message": "Hello from Python client",
             # Robot identity (validated by Unity via GAS/Firebase)
             "player_name": self.robot_config.get("NAME", "Player0000"),
-            "comp_name": self.robot_config.get("COMP_NAME", ""),
+            "comp_name": self.robot_config.get("COMPETITION_NAME", ""),
             "mode": self._get_mode_string(),
             "race_flag": self.robot_config.get("RACE_FLAG", 0)
         }
