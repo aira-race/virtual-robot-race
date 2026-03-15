@@ -13,29 +13,39 @@
 レッスンで開発した、あなたのルールベースアルゴリズムまたはAIモデルを完成させてください。
 
 ### Step 2: レース参加設定
-`Robot1/robot_config.txt` を開き、以下の2つの項目を設定します。
+リポジトリルートの `config.txt` を開き、以下の項目を設定します。
 
 #### プレイヤー名
-`NAME` に、ランキングに表示されるあなたのプレイヤー名（半角英数10文字以内）を設定します。他の参加者と区別できる、わかりやすい名前が推奨されます。
+`NAME` に、ランキングに表示されるあなたのプレイヤー名を設定します。使用できる文字は半角英数字とアンダースコア（`_`）のみ、最大16文字です。
 
 ```ini
-# Player name (up to 10 alphanumeric characters, used for leaderboard)
-NAME=Player0000
+# Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
+NAME=aira_Racer_0001
 ```
+
+#### コンペティション名
+`COMPETITION_NAME` に、参加するコンペティションのIDを設定します。練習走行の場合は `Tutorial` のままにしてください。
+
+```ini
+# Competition name: must match a valid competition ID registered on the platform
+COMPETITION_NAME=Tutorial
+```
+
+> **注意（コンペティション参加時）**: `COMPETITION_NAME` に正式なレースIDを設定する場合、あなたの `NAME` が事前にコンペティションシートに登録されている必要があります。未登録の場合、レース開始前に認証エラーが表示されます。
 
 #### レース参加フラグ
 `RACE_FLAG` を `1` に変更します。これを `1` にすると、走行結果が公式リーダーボードに登録されます。
 
 ```ini
 # Race participation flag:
-# 1 = Participate in race (results will be posted)
-# 0 = Test Run only (no results posted)
+# 1 = Submit result to leaderboard
+# 0 = Test run only (no submission)
 RACE_FLAG=1
 ```
 
 ### Step 3: 走行
 `main.py` を実行して、タイムアタックを開始します。
-完走すると、タイムが自動的にリーダーボードに登録されます。
+完走すると **POST確認パネル** が表示されます。内容を確認して **POST** ボタンをクリックすると、最速タイムがリーダーボードに登録されます。
 
 **リーダーボード:** [https://aira-race.com/](https://aira-race.com/)
 

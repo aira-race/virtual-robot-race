@@ -22,6 +22,17 @@ Virtual Robot Race is a **beginner-friendly robot simulation environment** where
 
 ## What's New
 
+### Version 1.7 (2026-03-15)
+- **New**: aira HUD redesign — status panel (PLAYER/COMP/MODE/LAP/SOC/STATUS), race timer, camera view decoration with SOC bar, corner-bracket reticle
+- **New**: GAS (Google Apps Script) backend v2 — tutorial and competition result posting via WebApp URL
+- **New**: Post confirmation panel — operator confirms before submitting results to leaderboard
+- **New**: Competition mode — player verification against Competition_Index sheet before race start
+- **Change**: Unified config — all settings moved from `Robot1/robot_config.txt` to single `config.txt`
+- **Change**: `COMP_NAME` renamed to `COMPETITION_NAME`; default value is `Tutorial`
+- **Change**: `NAME` now accepts underscores (`_`), up to 16 characters
+- **Change**: Only the fastest result per race is submitted (previously all robots posted individually)
+- **Rebrand**: Executable renamed to `aira_Beta_1.7.exe`
+
 ### Version 1.6 (2026-02-28)
 - **New**: Tail lamp controller with shader — hue reflects steering direction, brightness reflects throttle, blink on reverse
 
@@ -180,7 +191,7 @@ virtual-robot-race/
 ├── Robot2/                  # Second robot (same structure as Robot1)
 │
 ├── Windows/                 # Unity executable
-│   ├── VirtualRobotRace_Beta.exe
+│   ├── aira_Beta_1.7.exe
 │   └── ...
 │
 ├── docs/                    # User-facing documentation
@@ -195,37 +206,33 @@ virtual-robot-race/
 
 ## Configure Your Robots
 
-### Global Settings (`config.txt`)
+All settings are in a single **`config.txt`** file in the repository root.
 
 ```ini
+# ===== Player =====
+NAME=aira_Racer_0001       # Up to 16 characters: A-Z, a-z, 0-9, _ (underscore)
+COMPETITION_NAME=Tutorial   # Competition ID or "Tutorial" for practice
+
+# ===== Network =====
 HOST=localhost
 PORT=12346
 
-# Which robots to activate (comma-separated, max 2 robots)
-ACTIVE_ROBOTS=1,2    # Both robots active
-# ACTIVE_ROBOTS=1    # Only Robot1
-
+# ===== System =====
+ACTIVE_ROBOTS=1,2    # Which robots to activate (comma-separated, max 2)
+HEADLESS=0           # 0=Show launcher GUI, 1=Start immediately
 DEBUG_MODE=0         # 0=Auto-launch Unity (recommended), 1=Manual (advanced)
+
+# ===== Data & Race =====
+DATA_SAVE=0          # 1=Save images+CSV, 0=Don't save
+RACE_FLAG=0          # 1=Submit result to leaderboard, 0=Practice only
+X_POST_FLAG=0        # 1=Post result to X (Twitter), 0=Don't post
+
+# ===== Robot Modes =====
+R1_MODE_NUM=4        # Robot1 mode: 1=keyboard, 2=table, 3=rule_based, 4=ai, 5=smartphone
+R2_MODE_NUM=4        # Robot2 mode
 ```
 
-### Per-Robot Settings (`Robot1/robot_config.txt`, `Robot2/robot_config.txt`)
-
-```ini
-# Control mode
-MODE_NUM=1           # 1=keyboard, 2=table, 3=rule_based, 4=ai, 5=smartphone
-
-# Robot identifier
-ROBOT_ID=R1          # R1, R2, etc.
-
-# Player name (shown on leaderboard)
-NAME=Player1234      # Up to 10 alphanumeric characters
-
-# Race participation
-RACE_FLAG=1          # 1=Post results to leaderboard, 0=Practice only
-
-# Recording settings
-DATA_SAVE=1          # 1=Save CSV and images, 0=Don't save
-```
+> **Note**: `robot_config.txt` files (Robot1/, Robot2/) are no longer used. All configuration is unified in `config.txt`.
 
 ---
 
@@ -322,41 +329,31 @@ R = responsibility ratio            (0.0 to 1.0)
 ### Solo Practice
 ```ini
 # config.txt
+NAME=YourName
 ACTIVE_ROBOTS=1
-
-# Robot1/robot_config.txt
-MODE_NUM=1
-RACE_FLAG=0    # Practice mode
+R1_MODE_NUM=1
+RACE_FLAG=0          # Practice — no result submission
 ```
 
 ### Head-to-Head Race
 ```ini
 # config.txt
-ACTIVE_ROBOTS=1,2
-
-# Robot1/robot_config.txt — you
-MODE_NUM=1
 NAME=YourName
-RACE_FLAG=1
-
-# Robot2/robot_config.txt — AI opponent
-MODE_NUM=4
-NAME=AIDriver
-RACE_FLAG=0
+COMPETITION_NAME=Race_XXXXXX   # Must match a registered competition ID
+ACTIVE_ROBOTS=1,2
+R1_MODE_NUM=1        # You drive Robot1
+R2_MODE_NUM=4        # AI opponent
+RACE_FLAG=1          # Submit fastest result to leaderboard
 ```
 
 ### Algorithm Competition
 ```ini
 # Compare two approaches
+NAME=YourName
 ACTIVE_ROBOTS=1,2
-
-# Robot1: Rule-based
-MODE_NUM=3
-NAME=RuleBot
-
-# Robot2: Neural network
-MODE_NUM=4
-NAME=NeuralBot
+R1_MODE_NUM=3        # Rule-based
+R2_MODE_NUM=4        # Neural network
+RACE_FLAG=0
 ```
 
 ---
@@ -375,12 +372,14 @@ NAME=NeuralBot
 
 After completing a race with `RACE_FLAG=1`:
 
-1. Your lap time will be automatically posted to the leaderboard
-2. Visit [https://virtualrobotrace.com](https://virtualrobotrace.com) to see your ranking
-3. Share your achievement on X (Twitter)
-4. Challenge other racers to beat your time!
+1. A **Post Confirmation Panel** appears — review your result and click **POST**
+2. The fastest result across all active robots is submitted to the leaderboard
+3. Visit [https://aira-race.com/](https://aira-race.com/) to see your ranking
+4. Share your achievement on X (Twitter)
+5. Challenge other racers to beat your time!
 
 > Tip: Set `RACE_FLAG=0` during practice to avoid posting incomplete runs.
+> Note: Competition mode requires your `NAME` to be pre-registered in the competition sheet. Use `COMPETITION_NAME=Tutorial` for open practice.
 
 ---
 
@@ -417,7 +416,7 @@ After completing a race with `RACE_FLAG=1`:
 
 ### Unity won't launch
 - Set `DEBUG_MODE=1` in config.txt and launch Unity manually
-- Check that `Windows/VirtualRobotRace_Beta.exe` exists
+- Check that `Windows/aira_Beta_1.7.exe` exists
 
 ### Robot doesn't move
 - Verify `ACTIVE_ROBOTS` includes your robot number
@@ -431,8 +430,10 @@ After completing a race with `RACE_FLAG=1`:
 
 ### Results not posting
 - Check your internet connection
-- Verify `RACE_FLAG=1` in robot_config.txt
-- Ensure `NAME` is 1–10 alphanumeric characters
+- Verify `RACE_FLAG=1` in config.txt
+- Ensure `NAME` is 1–16 characters (A-Z, a-z, 0-9, underscore only)
+- For competition mode: verify your `NAME` is registered in the competition sheet
+- Make sure to click **POST** on the confirmation panel after the race
 
 ---
 
