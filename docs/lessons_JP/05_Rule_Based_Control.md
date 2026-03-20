@@ -51,7 +51,6 @@
 
 ```
 Robot1/
-├── robot_config.txt          ← MODE_NUM=3 でルールベースモードに切替
 ├── rule_based_input.py       ← メインの制御ループ（ここが司令塔）
 ├── rule_based_algorithms/    ← アルゴリズム群（ここを書き換えて開発する）
 │   ├── perception_Startsignal.py   スタート合図の検出
@@ -122,10 +121,10 @@ def get_latest_command():
 
 ## 3. まずはサンプルで走らせてみよう
 
-`Robot1/robot_config.txt` の `MODE_NUM` を `3` に変更します。
+`config.txt` の `R1_MODE_NUM` を `3` に変更します。
 
 ```ini
-MODE_NUM=3
+R1_MODE_NUM=3
 ```
 
 `main.py` を起動してロボットを走らせてみましょう。

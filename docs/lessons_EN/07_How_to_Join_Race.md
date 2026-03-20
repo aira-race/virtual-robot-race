@@ -58,7 +58,7 @@ In the next training session, you will compete in direct head-to-head races.
 ### How to Submit
 Compress your entire `Robot1` folder as a ZIP file and submit it to the designated location.
 
-**Submission location:** (Will be announced later)
+**Submission location:** Check the active competition page for the ZIP submission link: [https://aira-race.com/competitions](https://aira-race.com/competitions)
 
 ### Race Format
 - Submitted programs will race two at a time.

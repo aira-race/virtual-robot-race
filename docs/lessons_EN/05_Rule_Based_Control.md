@@ -51,7 +51,6 @@ The control loop runs at **20 fps (50 ms intervals)**. Every 50 ms, the image an
 
 ```
 Robot1/
-├── robot_config.txt          ← Set MODE_NUM=3 to switch to rule-based mode
 ├── rule_based_input.py       ← Main control loop (the command center)
 ├── rule_based_algorithms/    ← Algorithm collection (edit these to develop)
 │   ├── perception_Startsignal.py   Start signal detection
@@ -122,10 +121,10 @@ def get_latest_command():
 
 ## 3. Run the Sample First
 
-Change `MODE_NUM` in `Robot1/robot_config.txt` to `3`.
+Change `R1_MODE_NUM` in `config.txt` to `3`.
 
 ```ini
-MODE_NUM=3
+R1_MODE_NUM=3
 ```
 
 Launch `main.py` and run the robot.

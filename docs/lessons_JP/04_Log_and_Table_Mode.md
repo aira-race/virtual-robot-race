@@ -111,13 +111,10 @@
 ### 課題1: ログデータから走行を再現する
 
 1.  **事前準備**
-    - `config.txt`の`ACTIVE_ROBOTS`を`1`に設定します。
-    - `Robot1/robot_config.txt`を以下のように編集します。
+    - `config.txt` を以下のように設定します。
       ```ini
-      
-      MODE_NUM=2
-      
-
+      ACTIVE_ROBOTS=1
+      R1_MODE_NUM=2
       ```
 
 2.  **テーブルデータの作成**

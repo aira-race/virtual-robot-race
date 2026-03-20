@@ -58,7 +58,7 @@ RACE_FLAG=1
 ### 提出方法
 あなたが開発した `Robot1` フォルダ全体をZIP形式で圧縮し、指定の場所に提出してください。
 
-**提出先:** (後日アナウンスします)
+**提出先:** 参加中のコンペページで ZIP 提出リンクを確認してください: [https://aira-race.com/competitions](https://aira-race.com/competitions)
 
 ### レース形式
 - 提出されたプログラムを使い、2台ずつでレースを行います。
