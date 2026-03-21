@@ -140,6 +140,7 @@ def _build_robot_config(robot_num: int) -> dict:
         "DATA_SAVE":    data_save,
         "RACE_FLAG":    CONFIG.get("RACE_FLAG", 0),
         "X_POST_FLAG":  CONFIG.get("X_POST_FLAG", 0),
+        "HEADLESS":     CONFIG.get("HEADLESS", 0),
         # Video settings derived from DATA_SAVE (advanced users can adjust constants here)
         "AUTO_MAKE_VIDEO": 1 if data_save == 1 else 0,
         "VIDEO_FPS":    20,

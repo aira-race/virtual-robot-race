@@ -57,7 +57,9 @@ class RobotWebSocketClient:
             "comp_name": self.robot_config.get("COMPETITION_NAME", ""),
             "player_token": self.robot_config.get("PLAYER_TOKEN", ""),
             "mode": self._get_mode_string(),
-            "race_flag": self.robot_config.get("RACE_FLAG", 0)
+            "race_flag": self.robot_config.get("RACE_FLAG", 0),
+            "x_post_flag": self.robot_config.get("X_POST_FLAG", 0),
+            "headless": self.robot_config.get("HEADLESS", 0)
         }
 
         # Include active_robots list (only if provided)
@@ -162,6 +164,12 @@ class RobotWebSocketClient:
                 soc = data.get("soc", 1.0)
                 soc_file = data_manager.get_soc_file(self.robot_id)
                 soc_file.write_text(str(soc), encoding="utf-8")
+
+            elif msg_type == "race_ended":
+                print(f"[{self.robot_id}] Race ended signal received from Unity. Stopping.")
+                self.running = False
+                if self.websocket:
+                    await self.websocket.close()
 
             elif msg_type == "verification_failed":
                 reason = data.get("reason", "Unknown reason")
