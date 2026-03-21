@@ -8,6 +8,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import re
+import webbrowser
 from pathlib import Path
 
 # ── Color palette (aira brand) ────────────────────────────────────────────────
@@ -32,7 +33,11 @@ MODE_TO_NUM  = {"keyboard": "1", "table": "2", "rule_based": "3",
                 "ai": "4", "smartphone": "5"}
 NUM_TO_MODE  = {v: k for k, v in MODE_TO_NUM.items()}
 
-CONFIG_PATH = Path("config.txt")
+CONFIG_PATH  = Path("config.txt")
+SECRET_PATH  = Path("player_secret.txt")
+
+TOKEN_OK  = "#00C878"   # Green — token saved
+TOKEN_NG  = "#FF8C00"   # Amber — token missing
 
 
 # ── Config I/O ────────────────────────────────────────────────────────────────
@@ -54,6 +59,22 @@ def _write_config_value(key: str, value: str) -> None:
     pattern = rf"^({re.escape(key)}\s*=\s*).*$"
     new_text = re.sub(pattern, rf"\g<1>{value}", text, flags=re.MULTILINE)
     CONFIG_PATH.write_text(new_text, encoding="utf-8")
+
+
+def _read_token() -> str:
+    """Read PLAYER_TOKEN from player_secret.txt. Returns '' if not found."""
+    if not SECRET_PATH.exists():
+        return ""
+    for line in SECRET_PATH.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line.startswith("PLAYER_TOKEN="):
+            return line.split("=", 1)[1].strip()
+    return ""
+
+
+def _write_token(token: str) -> None:
+    """Write PLAYER_TOKEN to player_secret.txt."""
+    SECRET_PATH.write_text(f"PLAYER_TOKEN={token}\n", encoding="utf-8")
 
 
 # ── Widgets ───────────────────────────────────────────────────────────────────
@@ -125,6 +146,7 @@ def show_launcher() -> bool:
     or False if the user closed / clicked QUIT.
     """
     cfg = _read_config()
+    existing_token = _read_token()
     result = {"start": False}
 
     root = tk.Tk()
@@ -132,7 +154,7 @@ def show_launcher() -> bool:
     root.configure(bg=BG)
     root.resizable(False, False)
 
-    # Center on screen
+    # Center on screen (token section hidden by default, expands to 570 on SUBMIT)
     W, H = 420, 490
     root.update_idletasks()
     x = (root.winfo_screenwidth()  - W) // 2
@@ -197,6 +219,71 @@ def show_launcher() -> bool:
     # Apply initial state after widgets are created
     root.after(10, update_robot_state)
 
+    # ── Token (hidden until RACE_FLAG=SUBMIT) ─────────────────
+    token_var  = tk.StringVar(value=existing_token)
+    show_token = tk.BooleanVar(value=False)
+
+    # Outer container — packed/forgotten as a unit
+    token_section = tk.Frame(root, bg=BG)
+
+    tk.Label(token_section, text="PLAYER TOKEN", bg=BG, fg=AMBER,
+             font=("Courier", 8), anchor="w").pack(fill="x", padx=24, pady=(16, 2))
+
+    token_row = tk.Frame(token_section, bg=BG)
+    token_row.pack(fill="x", padx=24, pady=5)
+    tk.Label(token_row, text="Token", bg=BG, fg=MUTED,
+             font=FONT_UI, width=13, anchor="w").pack(side="left")
+
+    token_entry = tk.Entry(
+        token_row, textvariable=token_var,
+        bg=SURFACE, fg=TEXT, insertbackground=TEXT,
+        relief="flat", font=("Courier", 9),
+        highlightthickness=1, highlightbackground=BORDER,
+        highlightcolor=ACCENT, bd=4, show="●",
+    )
+    token_entry.pack(side="left", fill="x", expand=True)
+
+    def _toggle_show():
+        token_entry.configure(show="" if show_token.get() else "●")
+
+    show_token.trace_add("write", lambda *_: _toggle_show())
+
+    tk.Checkbutton(
+        token_row, text="show", variable=show_token,
+        bg=BG, fg=MUTED, selectcolor=SURFACE,
+        activebackground=BG, activeforeground=TEXT,
+        font=("Courier", 8), bd=0, highlightthickness=0,
+    ).pack(side="left", padx=(6, 0))
+
+    # Status / link row
+    status_row = tk.Frame(token_section, bg=BG)
+    status_row.pack(fill="x", padx=24)
+
+    status_lbl = tk.Label(status_row, bg=BG, font=("Courier", 8), anchor="w")
+    status_lbl.pack(side="left")
+
+    link_lbl = tk.Label(
+        status_row, text="Get your token at aira-race.com →",
+        bg=BG, fg=ACCENT, font=("Courier", 8, "underline"),
+        cursor="hand2", anchor="w",
+    )
+    link_lbl.bind("<Button-1>", lambda _: webbrowser.open("https://aira-race.com"))
+
+    def _update_token_status(*_):
+        t = token_var.get().strip()
+        if t:
+            is_saved = (t == existing_token)
+            status_lbl.configure(
+                text="✓ saved" if is_saved else "● unsaved — will write on START",
+                fg=TOKEN_OK if is_saved else TOKEN_NG,
+            )
+            link_lbl.pack_forget()
+        else:
+            status_lbl.configure(text="⚠ not set  ", fg=TOKEN_NG)
+            link_lbl.pack(side="left")
+
+    token_var.trace_add("write", _update_token_status)
+
     # ── Run options ───────────────────────────────────────────
     _section(root, "RUN OPTIONS")
     data_var = tk.IntVar(value=int(cfg.get("DATA_SAVE", "0")))
@@ -204,8 +291,26 @@ def show_launcher() -> bool:
     _row(root, "Data save",  lambda p: _toggle(p, data_var, "ON", "OFF"))
     _row(root, "Race flag",  lambda p: _toggle(p, race_var, "SUBMIT", "TEST ONLY"))
 
+    def _on_race_flag_change(*_):
+        is_submit = (race_var.get() == 1)
+        if is_submit:
+            token_section.pack(fill="x", before=spacer_frame)
+            _update_token_status()
+            root.geometry(f"{W}x570+{x}+{y}")
+        else:
+            token_section.pack_forget()
+            root.geometry(f"{W}x490+{x}+{y}")
+
+    race_var.trace_add("write", _on_race_flag_change)
+
+    # Show token section immediately if RACE_FLAG=1 on launch
+    # Show token section on launch if RACE_FLAG=1 (after all widgets are created)
+    if race_var.get() == 1:
+        root.after(0, _on_race_flag_change)
+
     # ── Buttons ───────────────────────────────────────────────
-    tk.Frame(root, bg=BG).pack(fill="both", expand=True)  # spacer
+    spacer_frame = tk.Frame(root, bg=BG)
+    spacer_frame.pack(fill="both", expand=True)
 
     btn_frame = tk.Frame(root, bg=BG, padx=24, pady=18)
     btn_frame.pack(fill="x")
@@ -237,13 +342,27 @@ def show_launcher() -> bool:
                 parent=root,
             )
             return
-        _write_config_value("NAME",          name)
-        _write_config_value("COMPETITION_NAME",     comp_var.get().strip())
-        _write_config_value("ACTIVE_ROBOTS", active_var.get())
-        _write_config_value("R1_MODE_NUM",   MODE_TO_NUM[r1_var.get()])
-        _write_config_value("R2_MODE_NUM",   MODE_TO_NUM[r2_var.get()])
-        _write_config_value("DATA_SAVE",     str(data_var.get()))
-        _write_config_value("RACE_FLAG",     str(race_var.get()))
+        # Check: token required for competition (RACE_FLAG=1, non-Tutorial)
+        token = token_var.get().strip()
+        if is_comp and not token:
+            messagebox.showerror(
+                "Player Token Required",
+                "RACE_FLAG is set to SUBMIT and COMPETITION_NAME is a competition.\n\n"
+                "A Player Token is required to submit results.\n"
+                "Paste your token (from the registration email) into the Token field.",
+                parent=root,
+            )
+            return
+        # Write token to player_secret.txt if changed or newly entered
+        if token and token != existing_token:
+            _write_token(token)
+        _write_config_value("NAME",             name)
+        _write_config_value("COMPETITION_NAME", comp_var.get().strip())
+        _write_config_value("ACTIVE_ROBOTS",    active_var.get())
+        _write_config_value("R1_MODE_NUM",      MODE_TO_NUM[r1_var.get()])
+        _write_config_value("R2_MODE_NUM",      MODE_TO_NUM[r2_var.get()])
+        _write_config_value("DATA_SAVE",        str(data_var.get()))
+        _write_config_value("RACE_FLAG",        str(race_var.get()))
         result["start"] = True
         root.destroy()
 

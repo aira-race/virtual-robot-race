@@ -21,6 +21,7 @@ import re
 from pathlib import Path
 
 CONFIG_PATH = "config.txt"
+PLAYER_SECRET_PATH = "player_secret.txt"
 
 # Default values for all settings in config.txt
 DEFAULT_CONFIG = {
@@ -134,6 +135,7 @@ def _build_robot_config(robot_num: int) -> dict:
         "ROBOT_ID":     robot_id,
         "NAME":         validate_name(CONFIG.get("NAME", DEFAULT_CONFIG["NAME"])),
         "COMPETITION_NAME":    CONFIG.get("COMPETITION_NAME", DEFAULT_CONFIG["COMPETITION_NAME"]),
+        "PLAYER_TOKEN": load_player_token(),
         "MODE_NUM":     mode_num,
         "DATA_SAVE":    data_save,
         "RACE_FLAG":    CONFIG.get("RACE_FLAG", 0),
@@ -149,6 +151,24 @@ def _build_robot_config(robot_num: int) -> dict:
     return robot_config
 
 
+def load_player_token() -> str:
+    """
+    Load PLAYER_TOKEN from player_secret.txt (gitignored).
+    Returns the token string, or empty string if file not found.
+    """
+    if not os.path.exists(PLAYER_SECRET_PATH):
+        return ""
+    try:
+        with open(PLAYER_SECRET_PATH, "r", encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                if line.startswith("PLAYER_TOKEN="):
+                    return line.split("=", 1)[1].strip()
+    except Exception as e:
+        print(f"[Config] Failed to read {PLAYER_SECRET_PATH}: {e}")
+    return ""
+
+
 def apply_config() -> None:
     """
     Load config.txt and expose settings as module-level variables.
@@ -157,6 +177,7 @@ def apply_config() -> None:
     """
     global HOST, PORT, ACTIVE_ROBOTS, HEADLESS, DEBUG_MODE
     global NAME, COMPETITION_NAME, DATA_SAVE, RACE_FLAG, X_POST_FLAG
+    global PLAYER_TOKEN
 
     load_config()
 
@@ -169,6 +190,7 @@ def apply_config() -> None:
     DATA_SAVE   = CONFIG["DATA_SAVE"]
     RACE_FLAG   = CONFIG["RACE_FLAG"]
     X_POST_FLAG = CONFIG["X_POST_FLAG"]
+    PLAYER_TOKEN = load_player_token()
 
     # Parse comma-separated robot numbers into a list of ints: "1,2" -> [1, 2]
     ACTIVE_ROBOTS = [int(r.strip()) for r in CONFIG.get("ACTIVE_ROBOTS", "1").split(",")]

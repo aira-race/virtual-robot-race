@@ -5,10 +5,10 @@
 # ===== Player =====
 
 # Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
-NAME=aira_Racer_0001
+NAME=infoAArace
 
 # Competition name: must match a valid competition ID registered on the platform
-COMPETITION_NAME=Tutorial
+COMPETITION_NAME=Race_260601
 
 
 # ===== Network =====
@@ -29,7 +29,7 @@ ACTIVE_ROBOTS=1,2
 # Headless mode:
 # 0 = Show launcher GUI/CLI before starting (recommended)
 # 1 = Read config and start immediately (for automated/training loops)
-HEADLESS=1
+HEADLESS=0
 
 # Debug mode (advanced):
 # 0 = Auto-launch Unity executable (recommended)
@@ -47,7 +47,7 @@ DATA_SAVE=0
 # Race participation flag:
 # 1 = Submit result to leaderboard
 # 0 = Test run only (no submission)
-RACE_FLAG=0
+RACE_FLAG=1
 
 # Post to X (Twitter) on race completion:
 # 1 = Post result to X

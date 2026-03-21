@@ -34,6 +34,9 @@ specs/
 # Robot-specific user config (per-machine settings)
 **/robot_config.txt
 
+# Player secret token (never commit — contains authentication token)
+player_secret.txt
+
 # Training data (large, generated)
 Robot*/training_data/
 Robot*/training_data_bad/

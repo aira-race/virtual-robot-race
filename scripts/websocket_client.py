@@ -52,9 +52,10 @@ class RobotWebSocketClient:
             "type": "connection",
             "robot_id": self.robot_id,
             "message": "Hello from Python client",
-            # Robot identity (validated by Unity via GAS/Firebase)
+            # Robot identity (validated by Unity via GAS)
             "player_name": self.robot_config.get("NAME", "Player0000"),
             "comp_name": self.robot_config.get("COMPETITION_NAME", ""),
+            "player_token": self.robot_config.get("PLAYER_TOKEN", ""),
             "mode": self._get_mode_string(),
             "race_flag": self.robot_config.get("RACE_FLAG", 0)
         }
@@ -161,6 +162,14 @@ class RobotWebSocketClient:
                 soc = data.get("soc", 1.0)
                 soc_file = data_manager.get_soc_file(self.robot_id)
                 soc_file.write_text(str(soc), encoding="utf-8")
+
+            elif msg_type == "verification_failed":
+                reason = data.get("reason", "Unknown reason")
+                print(f"[{self.robot_id}] *** VERIFICATION FAILED: {reason} ***")
+                print(f"[{self.robot_id}] Race aborted. Check your registration at aira-race.com")
+                self.running = False
+                if self.websocket:
+                    await self.websocket.close()
 
             else:
                 print(f"[{self.robot_id}] Unknown message type: {msg_type}")
