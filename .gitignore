@@ -24,8 +24,9 @@ ENV/
 docs_dev/
 specs/
 
-# AI model files (large binary)
+# AI model files (large binary) — exclude experiment checkpoints, keep final model
 *.pth
+!Robot*/models/model.pth
 
 # Backup files
 *.backup

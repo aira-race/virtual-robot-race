@@ -47,12 +47,7 @@ pip install -r requirements.txt
 
 Or simply double-click **`setup_env.bat`** for automatic setup!
 
-### 3. Download AI Model (Optional)
-If you want to use AI control mode (MODE_NUM=4):
-- [Download model.pth from Google Drive](https://drive.google.com/file/d/1NDL3A2lWDgXdy7OUWctyoR35jtYqthWD/view?usp=sharing)
-- Place it in `Robot1/models/model.pth`
-
-### 4. Run the Simulator
+### 3. Run the Simulator
 ```bash
 python main.py
 ```
@@ -157,7 +152,7 @@ virtual-robot-race/
 │   │   └── ...
 │   ├── data_interactive/    # Real-time data (auto-generated, gitignored)
 │   ├── models/
-│   │   └── model.pth        # AI model (download separately)
+│   │   └── model.pth        # AI model (included in repo)
 │   └── training_data/       # Recorded runs for AI training
 │       └── run_YYYYMMDD_HHMMSS/
 │           ├── images/
@@ -402,9 +397,9 @@ After completing a race with `RACE_FLAG=1`:
 - Try keyboard control (MODE_NUM=1) first
 
 ### AI model not found
-- Download `model.pth` from Google Drive
-- Place it in `Robot*/models/model.pth`
-- Make sure the filename is exactly `model.pth`
+- Make sure you cloned the full repository (not just downloaded as ZIP without LFS)
+- The file should be at `Robot1/models/model.pth`
+- If missing, re-run `git pull` to fetch the latest files
 
 ### Results not posting
 - Check your internet connection
