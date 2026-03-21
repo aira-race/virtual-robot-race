@@ -257,18 +257,20 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
 
     await loop.run_in_executor(None, _encode)
 
-    # Note: OPEN_EXPLORER_ON_VIDEO was removed from robot_config
-    # Always try to open for now (Windows-specific behavior)
-    try:
-        if sys.platform.startswith("win") and out_path.exists():
-            subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
-            print("[Main] Explorer opened with the MP4 selected.")
-        else:
-            opener = "open" if sys.platform == "darwin" else "xdg-open"
-            subprocess.Popen([opener, str(run_dir)])
-            print("[Main] Opened run directory in file manager.")
-    except Exception as e:
-        print(f"[Main] Failed to open file manager: {e}")
+    # Open file manager only in interactive (non-headless) mode
+    if robot_config.get("HEADLESS", 0) == 1:
+        print("[Main] Headless mode: Skipping explorer popup.")
+    else:
+        try:
+            if sys.platform.startswith("win") and out_path.exists():
+                subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
+                print("[Main] Explorer opened with the MP4 selected.")
+            else:
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.Popen([opener, str(run_dir)])
+                print("[Main] Opened run directory in file manager.")
+        except Exception as e:
+            print(f"[Main] Failed to open file manager: {e}")
 
     if robot_config.get("DATA_SAVE", 1) == 0:
         try:
@@ -699,8 +701,11 @@ async def main() -> None:
     unity_proc = None
 
     try:
-        # 2) Launch Unity
-        if config_loader.DEBUG_MODE == 0:
+        # 2) Launch Unity (skipped when headless_loop.py manages Unity externally)
+        skip_launch = os.environ.get("AIRA_SKIP_UNITY_LAUNCH") == "1"
+        if skip_launch:
+            print("[Main] AIRA_SKIP_UNITY_LAUNCH=1 → Unity managed externally, skipping launch.")
+        elif config_loader.DEBUG_MODE == 0:
             unity_proc = launch_unity_exe()
             if not unity_proc:
                 print("[Main] Failed to launch Unity. Exiting.")
