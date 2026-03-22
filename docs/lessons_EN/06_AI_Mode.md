@@ -14,10 +14,10 @@ Make active use of an AI assistant (such as Gemini Code Assist) here as well.
 
 ## 1. First, Run the Robot in AI Mode
 
-Change `MODE_NUM` in `Robot1/robot_config.txt` to `4`.
+Change `R1_MODE_NUM` in `config.txt` to `4`.
 
 ```ini
-MODE_NUM=4
+R1_MODE_NUM=4
 ```
 
 ### 1.1 Prepare the Sample Model
@@ -163,10 +163,10 @@ Robot1/
 
 **Step 1: Collect data**
 
-Set `robot_config.txt` to the following and drive in keyboard mode.
+Set `config.txt` to the following and drive in keyboard mode.
 
 ```ini
-MODE_NUM=1
+R1_MODE_NUM=1
 DATA_SAVE=1
 ```
 
@@ -347,7 +347,7 @@ This is handled by `rl_reward.py` and `run_scorer.py`.
 
 > **Note**: `rl_reward.py` is **not** for updating the model in real-time.
 > It is a "scoring criteria" for scoring driving quality by reading `metadata.csv` after the race ends.
-> In Beta 1.6, position information (pos_x, pos_z) cannot be obtained in real-time, so performing real-time reinforcement learning during a race is not practical.
+> In the current version, position information (pos_x, pos_z) cannot be obtained in real-time, so performing real-time reinforcement learning during a race is not practical.
 
 ---
 

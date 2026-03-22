@@ -16,6 +16,7 @@ class RobotWebSocketClient:
         self.server_url = server_url
         self.websocket = None
         self.running = False
+        self.race_completed = False  # True only when race_ended received from Unity
         self.robot_config = robot_config or {}
         self.active_robots = active_robots  # List of active robot numbers [1, 2, ...]
 
@@ -52,10 +53,14 @@ class RobotWebSocketClient:
             "type": "connection",
             "robot_id": self.robot_id,
             "message": "Hello from Python client",
-            # Robot identity (for race results posting)
+            # Robot identity (validated by Unity via GAS)
             "player_name": self.robot_config.get("NAME", "Player0000"),
+            "comp_name": self.robot_config.get("COMPETITION_NAME", ""),
+            "player_token": self.robot_config.get("PLAYER_TOKEN", ""),
             "mode": self._get_mode_string(),
-            "race_flag": self.robot_config.get("RACE_FLAG", 0)
+            "race_flag": self.robot_config.get("RACE_FLAG", 0),
+            "x_post_flag": self.robot_config.get("X_POST_FLAG", 0),
+            "headless": self.robot_config.get("HEADLESS", 0)
         }
 
         # Include active_robots list (only if provided)
@@ -83,7 +88,7 @@ class RobotWebSocketClient:
     def _get_mode_string(self) -> str:
         """Convert MODE_NUM to mode string"""
         mode_num = self.robot_config.get("MODE_NUM", 1)
-        mode_map = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai"}
+        mode_map = {1: "keyboard", 2: "table", 3: "rule_based", 4: "ai", 5: "smartphone", 6: "rl_training"}
         return mode_map.get(mode_num, "keyboard")
 
     async def send_json(self, data: dict):
@@ -160,6 +165,21 @@ class RobotWebSocketClient:
                 soc = data.get("soc", 1.0)
                 soc_file = data_manager.get_soc_file(self.robot_id)
                 soc_file.write_text(str(soc), encoding="utf-8")
+
+            elif msg_type == "race_ended":
+                print(f"[{self.robot_id}] Race ended signal received from Unity. Stopping.")
+                self.race_completed = True
+                self.running = False
+                if self.websocket:
+                    await self.websocket.close()
+
+            elif msg_type == "verification_failed":
+                reason = data.get("reason", "Unknown reason")
+                print(f"[{self.robot_id}] *** VERIFICATION FAILED: {reason} ***")
+                print(f"[{self.robot_id}] Race aborted. Check your registration at aira-race.com")
+                self.running = False
+                if self.websocket:
+                    await self.websocket.close()
 
             else:
                 print(f"[{self.robot_id}] Unknown message type: {msg_type}")

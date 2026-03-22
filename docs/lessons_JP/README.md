@@ -1,0 +1,76 @@
+# aira — ステップバイステップ レッスン
+
+aira トレーニングカリキュラムへようこそ。
+環境構築からはじめて、公式コンペへの結果提出まで、順を追って学べます。
+
+> **プラットフォーム**: [aira-race.com](https://aira-race.com) — アカウント登録、コンペ参加、ランキング確認はこちら。
+
+---
+
+## はじめる前に
+
+**対象者**
+- AI・自動運転・ロボット制御に興味のあるエンジニア、研究者、学生
+- AIの事前知識は不要 — 基本的なPythonとターミナル操作ができればOK
+- 一部ツール（Google Gemini Code Assist等）の利用に Google アカウントが必要（18歳以上推奨）
+
+**動作環境**
+- **Windows 10 以降**（Mac/Linux 対応は今後予定）
+- Python 3.12 以降 — [ダウンロードはこちら](https://www.python.org/downloads/)
+- VSCode — [ダウンロードはこちら](https://code.visualstudio.com/)
+- Git — [ダウンロードはこちら](https://git-scm.com/)
+- GitHub アカウント — [登録はこちら](https://github.com/signup)
+- aira アカウント — [aira-race.com で登録](https://aira-race.com/login)
+
+**推奨 VSCode 拡張機能**
+- **Python**（Microsoft）— Python 言語サポート
+- **Gemini Code Assist**（Google Cloud）— レッスン後半で使用するAIコーディング支援
+- **Markdown Preview Enhanced**（shd101wyy）— `Ctrl+Shift+V` でこのファイルをプレビュー。コードブロックにコピーボタンが表示されます
+
+---
+
+## レッスン一覧
+
+番号順に進めてください。各レッスンは前のレッスンを前提としています。
+
+| # | レッスン | 内容 | 目安時間 |
+|---|---------|------|---------|
+| **00** | [準備](00_Preparation.md) | リポジトリのフォーク、Python + VSCode のセットアップ、初回起動確認 | 約30分 |
+| **01** | [基礎](01_Foundation.md) | aira の設計思想と「意思決定サイクル」を理解する | 約15分 |
+| **02** | [ライブQ&A](02_Live_QA_NotebookLM.md) | NotebookLM を使った AI 質疑応答の活用方法 | 約15分 |
+| **03** | [手動操作](03_Manual_Control.md) | キーボードで手動走行、訓練データを収集する | 約30分 |
+| **04** | [ログ・テーブルモード](04_Log_and_Table_Mode.md) | 記録した走行を再生し、テレメトリログを分析する | 約30分 |
+| **05** | [ルールベース制御](05_Rule_Based_Control.md) | レーン追従アルゴリズムを書いて自律走行させる | 約60分 |
+| **06** | [AIモード](06_AI_Mode.md) | 模倣学習でニューラルネットワークを訓練し、推論を動かす | 約60分 |
+| **07** | [レースに参加する](07_How_to_Join_Race.md) | `config.txt` を設定して公式リーダーボードに結果を提出する | 約15分 |
+| **99** | [用語集](99_Glossary.md) | SOC、RACE_FLAG、WebSocket、トルクなどのキーワード解説 | 参照用 |
+
+**合計**: カリキュラム全体で約4〜5時間（複数回に分けてOK）
+
+---
+
+## レッスンの使い方
+
+1. **VSCode でフォルダを開く** — `ファイル > フォルダを開く > virtual-robot-race`
+2. **レッスンファイルを開く** — `Ctrl+Shift+V` でMarkdownプレビューを表示
+3. **コードブロックをコピー** — プレビュー右上のコピーボタンを使う
+4. **ターミナルに貼り付ける** — VSCode ターミナルでは右クリックで貼り付け（`Ctrl+V` 不要）
+5. **わからないことは質問** — Gemini Code Assist または NotebookLM を活用（レッスン02で説明）
+
+> 手順で詰まったら [GitHub Issue](https://github.com/aira-race/virtual-robot-race/issues) を開いて状況を共有してください。
+
+---
+
+## レッスン完了後
+
+レッスン07まで終えたら、コンペに参加する準備ができています。
+
+1. [aira-race.com](https://aira-race.com) で **アカウント登録** — 表示名を設定（これが `config.txt` の `NAME=` になります）
+2. [aira-race.com/competitions](https://aira-race.com/competitions) で **コンペに参加** — Competition ID を確認
+3. `config.txt` の **`COMPETITION_NAME`** にコンペIDを設定
+4. **`RACE_FLAG=1`** にして `python main.py` を実行
+5. 確認パネルで **POST をクリック** — リーダーボードに結果が反映されます
+
+---
+
+← [ドキュメントトップに戻る](../README.md)

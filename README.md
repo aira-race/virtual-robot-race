@@ -1,52 +1,31 @@
-# Virtual Robot Race
+# aira — Virtual Robot Race
 
 **Race your Algorithm. Challenge the World.**
 
-Educational robot racing simulator with Unity + Python — for learning AI, control algorithms, and autonomous driving.
+The official simulator for **[aira](https://aira-race.com)** — Autonomous Intelligence Racing Arena.
+Train your AI algorithm, race against others, and climb the global leaderboard.
 
-Perfect for students, hobbyists, and AI enthusiasts!
+> **Ready to compete?**
+> → **[Sign up & view competitions at aira-race.com](https://aira-race.com)**
+> → **[Global Leaderboard](https://aira-race.com/competitions)**
+
+> ⚠️ **Platform**: Windows only (so far). Mac/Linux support is planned for a future release.
 
 ---
 
-## What is Virtual Robot Race?
+## What is aira?
 
-Virtual Robot Race is a **beginner-friendly robot simulation environment** where you can:
+**aira** (Autonomous Intelligence Racing Arena) is a competition platform for Explainable Physical AI.
+This repository contains the **official simulator** — a beginner-friendly environment where you can:
+
 - Race robots with realistic car physics (torque steer dynamics)
 - Train and test AI models using PyTorch
-- Compete on the global leaderboard
+- Compete on the global leaderboard at [aira-race.com](https://aira-race.com)
 - Learn autonomous driving through hands-on experimentation
 
 2 robots race head-to-head on a closed circuit. You can drive manually, replay recorded runs, use rule-based algorithms, or let a neural network AI take the wheel.
 
----
-
-## What's New
-
-### Version 1.6 (2026-02-28)
-- **New**: Tail lamp controller with shader — hue reflects steering direction, brightness reflects throttle, blink on reverse
-
-### Version 1.5 (2026-02-08)
-- **New**: Collision penalty system — collisions drain battery (SOC) proportional to impact energy
-  - Wall collision: 100% self-responsibility, penalty based on speed squared
-  - Robot-to-robot collision: responsibility split based on velocity direction
-  - 1-second cooldown prevents double-counting from physics bounces
-  - Formula: `Penalty = k * E * R` where k=normalization, E=energy, R=responsibility
-- **New**: Collision data logged per-frame in metadata.csv (`collision_type`, `collision_penalty`, `collision_target`)
-- **New**: Battery depletion status — robots with empty battery become obstacles on track
-
-### Version 1.4 (2026-01-17)
-- **New**: Offline RL training pipeline (DAgger+, AWR)
-
-### Version 1.3 (2026-01-11)
-- **New**: Smartphone controller mode (MODE_NUM=5)
-- **New**: PanelManager for dynamic camera panel layout
-
-### Version 1.2 (2026-01-10)
-- **Fix**: Training data image/metadata alignment (328-frame offset resolved)
-
-### Version 1.1 (2025-12-13)
-- **New**: Real-time Input Vector Scope visualization
-- **New**: Rule-Based autonomous driving achieves 2-lap goal
+**Platform**: [aira-race.com](https://aira-race.com) — register, join competitions, and track your ranking.
 
 ---
 
@@ -68,17 +47,20 @@ pip install -r requirements.txt
 
 Or simply double-click **`setup_env.bat`** for automatic setup!
 
-### 3. Download AI Model (Optional)
-If you want to use AI control mode (MODE_NUM=4):
-- [Download model.pth from Google Drive](https://drive.google.com/file/d/1NDL3A2lWDgXdy7OUWctyoR35jtYqthWD/view?usp=sharing)
-- Place it in `Robot1/models/model.pth`
-
-### 4. Run the Simulator
+### 3. Run the Simulator
 ```bash
 python main.py
 ```
 
 Unity will auto-launch and the race begins!
+
+---
+
+## Step-by-Step Lessons
+
+New to aira? The lessons walk you through everything from environment setup to submitting your first race result — in English and Japanese.
+
+→ **[Open the Lessons index (docs/README.md)](docs/README.md)**
 
 ---
 
@@ -119,22 +101,23 @@ You'll see `(.venv)` at the start of your command line when the virtual environm
 
 ### GPU Acceleration (Recommended for AI Training)
 
-If you have an **NVIDIA GPU** and want faster AI model training, install the CUDA-enabled PyTorch:
+> **Note**: `pip install -r requirements.txt` installs the **CPU version** of PyTorch by default.
+> If you have an NVIDIA GPU, replace it with the CUDA version after setup:
 
 ```bash
 .venv\Scripts\activate
-pip uninstall torch torchvision -y
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+pip uninstall torch torchvision torchaudio -y
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
 **Verify GPU is detected:**
 ```bash
-python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
 
-> **No GPU?** The default CPU version works fine for inference (running the AI). GPU mainly speeds up training.
+> **No GPU?** The CPU version works fine for inference (running the AI during a race). GPU mainly speeds up training.
 
-> **CUDA version**: This project uses CUDA 12.4. If you have an older GPU or driver, try `cu118` instead of `cu124`.
+> **CUDA version**: `cu124` supports CUDA 12.4+. For older drivers, check your version with `nvidia-smi` and use `cu118` if needed.
 
 ---
 
@@ -155,7 +138,7 @@ virtual-robot-race/
 │   └── smartphone_server.py # Smartphone controller server
 │
 ├── Robot1/                  # First robot configuration
-│   ├── robot_config.txt     # Robot1 settings (mode, name, race flag)
+│   ├── robot_config.txt     # (legacy — no longer used; see config.txt)
 │   ├── keyboard_input.py    # Manual control (MODE_NUM=1)
 │   ├── table_input.py       # CSV playback (MODE_NUM=2)
 │   ├── table_input.csv      # Recorded control data
@@ -170,7 +153,7 @@ virtual-robot-race/
 │   │   └── ...
 │   ├── data_interactive/    # Real-time data (auto-generated, gitignored)
 │   ├── models/
-│   │   └── model.pth        # AI model (download separately)
+│   │   └── model.pth        # AI model (included in repo)
 │   └── training_data/       # Recorded runs for AI training
 │       └── run_YYYYMMDD_HHMMSS/
 │           ├── images/
@@ -180,7 +163,7 @@ virtual-robot-race/
 ├── Robot2/                  # Second robot (same structure as Robot1)
 │
 ├── Windows/                 # Unity executable
-│   ├── VirtualRobotRace_Beta.exe
+│   ├── aira_Beta_1.7.exe
 │   └── ...
 │
 ├── docs/                    # User-facing documentation
@@ -195,37 +178,33 @@ virtual-robot-race/
 
 ## Configure Your Robots
 
-### Global Settings (`config.txt`)
+All settings are in a single **`config.txt`** file in the repository root.
 
 ```ini
+# ===== Player =====
+NAME=aira_Racer_0001       # Up to 16 characters: A-Z, a-z, 0-9, _ (underscore)
+COMPETITION_NAME=Tutorial   # Competition ID or "Tutorial" for practice
+
+# ===== Network =====
 HOST=localhost
 PORT=12346
 
-# Which robots to activate (comma-separated, max 2 robots)
-ACTIVE_ROBOTS=1,2    # Both robots active
-# ACTIVE_ROBOTS=1    # Only Robot1
-
+# ===== System =====
+ACTIVE_ROBOTS=1,2    # Which robots to activate (comma-separated, max 2)
+HEADLESS=0           # 0=Show launcher GUI, 1=Start immediately
 DEBUG_MODE=0         # 0=Auto-launch Unity (recommended), 1=Manual (advanced)
+
+# ===== Data & Race =====
+DATA_SAVE=0          # 1=Save images+CSV, 0=Don't save
+RACE_FLAG=0          # 1=Submit result to leaderboard, 0=Practice only
+X_POST_FLAG=0        # 1=Post result to X (Twitter), 0=Don't post
+
+# ===== Robot Modes =====
+R1_MODE_NUM=4        # Robot1 mode: 1=keyboard, 2=table, 3=rule_based, 4=ai, 5=smartphone
+R2_MODE_NUM=4        # Robot2 mode
 ```
 
-### Per-Robot Settings (`Robot1/robot_config.txt`, `Robot2/robot_config.txt`)
-
-```ini
-# Control mode
-MODE_NUM=1           # 1=keyboard, 2=table, 3=rule_based, 4=ai, 5=smartphone
-
-# Robot identifier
-ROBOT_ID=R1          # R1, R2, etc.
-
-# Player name (shown on leaderboard)
-NAME=Player1234      # Up to 10 alphanumeric characters
-
-# Race participation
-RACE_FLAG=1          # 1=Post results to leaderboard, 0=Practice only
-
-# Recording settings
-DATA_SAVE=1          # 1=Save CSV and images, 0=Don't save
-```
+> **Note**: `robot_config.txt` files (Robot1/, Robot2/) are no longer used. All configuration is unified in `config.txt`.
 
 ---
 
@@ -247,7 +226,7 @@ DATA_SAVE=1          # 1=Save CSV and images, 0=Don't save
 - **I** or **M**: Steer center (neutral)
 
 ### 5. Smartphone Controller (MODE_NUM=5)
-1. Set `MODE_NUM=5` in robot_config.txt
+1. Set `R1_MODE_NUM=5` in `config.txt`
 2. Run `python main.py` — a QR code will appear
 3. Scan the QR code with your phone
 4. Use dual virtual joysticks to control your robot
@@ -322,41 +301,31 @@ R = responsibility ratio            (0.0 to 1.0)
 ### Solo Practice
 ```ini
 # config.txt
+NAME=YourName
 ACTIVE_ROBOTS=1
-
-# Robot1/robot_config.txt
-MODE_NUM=1
-RACE_FLAG=0    # Practice mode
+R1_MODE_NUM=1
+RACE_FLAG=0          # Practice — no result submission
 ```
 
 ### Head-to-Head Race
 ```ini
 # config.txt
-ACTIVE_ROBOTS=1,2
-
-# Robot1/robot_config.txt — you
-MODE_NUM=1
 NAME=YourName
-RACE_FLAG=1
-
-# Robot2/robot_config.txt — AI opponent
-MODE_NUM=4
-NAME=AIDriver
-RACE_FLAG=0
+COMPETITION_NAME=Race_XXXXXX   # Must match a registered competition ID
+ACTIVE_ROBOTS=1,2
+R1_MODE_NUM=1        # You drive Robot1
+R2_MODE_NUM=4        # AI opponent
+RACE_FLAG=1          # Submit fastest result to leaderboard
 ```
 
 ### Algorithm Competition
 ```ini
 # Compare two approaches
+NAME=YourName
 ACTIVE_ROBOTS=1,2
-
-# Robot1: Rule-based
-MODE_NUM=3
-NAME=RuleBot
-
-# Robot2: Neural network
-MODE_NUM=4
-NAME=NeuralBot
+R1_MODE_NUM=3        # Rule-based
+R2_MODE_NUM=4        # Neural network
+RACE_FLAG=0
 ```
 
 ---
@@ -369,25 +338,51 @@ NAME=NeuralBot
 4. **Race**: Run with MODE_NUM=4 (AI control)
 5. **Iterate**: Analyze results and improve
 
+## Algorithm Submission (Race competitions)
+
+After joining a Race competition on [aira-race.com](https://aira-race.com), you can submit your algorithm to the organizer.
+
+**Automatic (recommended):**
+Set `RACE_FLAG=1` in the launcher — the submission tool launches automatically after each race.
+
+**Manual:**
+```bash
+python scripts/submit_algorithm.py
+```
+
+The tool collects your `Robot1/` (or `Robot2/`) algorithm files, packages them as a ZIP, and uploads securely via your Player Token.
+
+> **Headless loop users**: Auto-submission is skipped during headless training loops (`HEADLESS=1`).
+> Run the submission tool manually when your training is complete.
+
+> **Note on upload reliability**: The submission tool uploads your new ZIP first, then removes the previous one.
+> If a network error occurs mid-upload, your previous submission remains active on the server.
+> Always confirm "Submission complete" appears before closing the window.
+> The organizers are not responsible for data loss caused by connection issues during upload.
+
 ---
 
 ## Sharing Your Results
 
 After completing a race with `RACE_FLAG=1`:
 
-1. Your lap time will be automatically posted to the leaderboard
-2. Visit [https://virtualrobotrace.com](https://virtualrobotrace.com) to see your ranking
-3. Share your achievement on X (Twitter)
-4. Challenge other racers to beat your time!
+1. A **Post Confirmation Panel** appears — review your result and click **POST**
+2. The fastest result across all active robots is submitted to the leaderboard
+3. Visit [https://aira-race.com/](https://aira-race.com/) to see your ranking
+4. Share your achievement on X (Twitter)
+5. Challenge other racers to beat your time!
 
 > Tip: Set `RACE_FLAG=0` during practice to avoid posting incomplete runs.
+> Note: Competition mode requires your `NAME` to be pre-registered in the competition sheet. Use `COMPETITION_NAME=Tutorial` for open practice.
 
 ---
 
 ## Community & Support
 
-- **Official Website**: [virtualrobotrace.com](https://virtualrobotrace.com)
+- **Platform & Leaderboard**: [aira-race.com](https://aira-race.com)
+- **Competitions**: [aira-race.com/competitions](https://aira-race.com/competitions)
 - **YouTube**: [@RaceYourAlgo](https://www.youtube.com/@RaceYourAlgo)
+- **X (Twitter)**: [@RaceYourAlgo](https://x.com/RaceYourAlgo)
 - **Issues**: [GitHub Issues](https://github.com/aira-race/virtual-robot-race/issues)
 
 ---
@@ -417,7 +412,7 @@ After completing a race with `RACE_FLAG=1`:
 
 ### Unity won't launch
 - Set `DEBUG_MODE=1` in config.txt and launch Unity manually
-- Check that `Windows/VirtualRobotRace_Beta.exe` exists
+- Check that `Windows/aira_Beta_1.7.exe` exists
 
 ### Robot doesn't move
 - Verify `ACTIVE_ROBOTS` includes your robot number
@@ -425,15 +420,58 @@ After completing a race with `RACE_FLAG=1`:
 - Try keyboard control (MODE_NUM=1) first
 
 ### AI model not found
-- Download `model.pth` from Google Drive
-- Place it in `Robot*/models/model.pth`
-- Make sure the filename is exactly `model.pth`
+- Make sure you cloned the full repository (not just downloaded as ZIP without LFS)
+- The file should be at `Robot1/models/model.pth`
+- If missing, re-run `git pull` to fetch the latest files
 
 ### Results not posting
 - Check your internet connection
-- Verify `RACE_FLAG=1` in robot_config.txt
-- Ensure `NAME` is 1–10 alphanumeric characters
+- Verify `RACE_FLAG=1` in config.txt
+- Ensure `NAME` is 1–16 characters (A-Z, a-z, 0-9, underscore only)
+- For competition mode: verify your `NAME` is registered in the competition sheet
+- Make sure to click **POST** on the confirmation panel after the race
 
 ---
 
 **Ready to race? Run `python main.py` and start your engines!**
+
+---
+
+## Version History
+
+### Version 1.7 (2026-03-15)
+- **New**: aira HUD redesign — status panel (PLAYER/COMP/MODE/LAP/SOC/STATUS), race timer, camera view decoration with SOC bar, corner-bracket reticle
+- **New**: GAS (Google Apps Script) backend v2 — tutorial and competition result posting via WebApp URL
+- **New**: Post confirmation panel — operator confirms before submitting results to leaderboard
+- **New**: Competition mode — player verification against Competition_Index sheet before race start
+- **Change**: Unified config — all settings moved from `Robot1/robot_config.txt` to single `config.txt`
+- **Change**: `COMP_NAME` renamed to `COMPETITION_NAME`; default value is `Tutorial`
+- **Change**: `NAME` now accepts underscores (`_`), up to 16 characters
+- **Change**: Only the fastest result per race is submitted (previously all robots posted individually)
+- **Rebrand**: Executable renamed to `aira_Beta_1.7.exe`
+
+### Version 1.6 (2026-02-28)
+- **New**: Tail lamp controller with shader — hue reflects steering direction, brightness reflects throttle, blink on reverse
+
+### Version 1.5 (2026-02-08)
+- **New**: Collision penalty system — collisions drain battery (SOC) proportional to impact energy
+  - Wall collision: 100% self-responsibility, penalty based on speed squared
+  - Robot-to-robot collision: responsibility split based on velocity direction
+  - 1-second cooldown prevents double-counting from physics bounces
+  - Formula: `Penalty = k * E * R` where k=normalization, E=energy, R=responsibility
+- **New**: Collision data logged per-frame in metadata.csv (`collision_type`, `collision_penalty`, `collision_target`)
+- **New**: Battery depletion status — robots with empty battery become obstacles on track
+
+### Version 1.4 (2026-01-17)
+- **New**: Offline RL training pipeline (DAgger+, AWR)
+
+### Version 1.3 (2026-01-11)
+- **New**: Smartphone controller mode (MODE_NUM=5)
+- **New**: PanelManager for dynamic camera panel layout
+
+### Version 1.2 (2026-01-10)
+- **Fix**: Training data image/metadata alignment (328-frame offset resolved)
+
+### Version 1.1 (2025-12-13)
+- **New**: Real-time Input Vector Scope visualization
+- **New**: Rule-Based autonomous driving achieves 2-lap goal

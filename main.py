@@ -5,7 +5,7 @@
 #  - RobotWebSocketClient (Python Client)
 #  - Input pipeline (keyboard / table / rule_based / AI)
 #  - Post-race video build (MP4)
-# Multi-robot support: Loads settings from Robot{N}/robot_config.txt and uses Robot{N}/ modules
+# Multi-robot support: Loads settings from config.txt (unified, Beta 1.7+) and uses Robot{N}/ modules
 
 import asyncio
 import threading
@@ -80,7 +80,7 @@ robot_clients: dict[str, RobotWebSocketClient] = {}
 def launch_unity_exe() -> Optional[subprocess.Popen]:
     """Launch the built Unity executable if it exists."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    exe_path = os.path.join(base_dir, "Windows", "VirtualRobotRace_Beta.exe")
+    exe_path = os.path.join(base_dir, "Windows", "aira_Beta_1.7.exe")
 
     if os.path.exists(exe_path):
         print(f"[Main] Launching Unity server: {exe_path}")
@@ -257,18 +257,22 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
 
     await loop.run_in_executor(None, _encode)
 
-    # Note: OPEN_EXPLORER_ON_VIDEO was removed from robot_config
-    # Always try to open for now (Windows-specific behavior)
-    try:
-        if sys.platform.startswith("win") and out_path.exists():
-            subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
-            print("[Main] Explorer opened with the MP4 selected.")
-        else:
-            opener = "open" if sys.platform == "darwin" else "xdg-open"
-            subprocess.Popen([opener, str(run_dir)])
-            print("[Main] Opened run directory in file manager.")
-    except Exception as e:
-        print(f"[Main] Failed to open file manager: {e}")
+    # Open file manager only in interactive (non-headless) mode and when X_POST_FLAG=1
+    if robot_config.get("HEADLESS", 0) == 1:
+        print("[Main] Headless mode: Skipping explorer popup.")
+    elif robot_config.get("X_POST_FLAG", 0) == 0:
+        print("[Main] X_POST_FLAG=0: Skipping explorer popup.")
+    else:
+        try:
+            if sys.platform.startswith("win") and out_path.exists():
+                subprocess.Popen(["explorer", f"/select,{str(out_path)}"])
+                print("[Main] Explorer opened with the MP4 selected.")
+            else:
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.Popen([opener, str(run_dir)])
+                print("[Main] Opened run directory in file manager.")
+        except Exception as e:
+            print(f"[Main] Failed to open file manager: {e}")
 
     if robot_config.get("DATA_SAVE", 1) == 0:
         try:
@@ -678,11 +682,32 @@ async def main() -> None:
                 # Mark this robot as disabled
                 rc['KEYBOARD_DISABLED'] = True
 
+    # Check: keyboard mode is not allowed in competition mode
+    comp_name = config_loader.COMPETITION_NAME.strip()
+    race_flag = config_loader.RACE_FLAG
+    is_comp_mode = (race_flag == 1 and comp_name not in ("", "Tutorial"))
+    if keyboard_robot is not None and is_comp_mode:
+        print()
+        print("[Main] ============================================================")
+        print("[Main]  ERROR: Invalid configuration")
+        print("[Main] ------------------------------------------------------------")
+        print(f"[Main]  Robot{keyboard_robot} is set to KEYBOARD mode,")
+        print(f"[Main]  but RACE_FLAG=1 and COMPETITION_NAME='{comp_name}' (competition mode).")
+        print("[Main]  Keyboard mode cannot participate in competitions.")
+        print("[Main]  → Change R{}_MODE_NUM to a non-keyboard mode,".format(keyboard_robot))
+        print("[Main]    or set RACE_FLAG=0 to run as a test.")
+        print("[Main] ============================================================")
+        print()
+        sys.exit(1)
+
     unity_proc = None
 
     try:
-        # 2) Launch Unity
-        if config_loader.DEBUG_MODE == 0:
+        # 2) Launch Unity (skipped when headless_loop.py manages Unity externally)
+        skip_launch = os.environ.get("AIRA_SKIP_UNITY_LAUNCH") == "1"
+        if skip_launch:
+            print("[Main] AIRA_SKIP_UNITY_LAUNCH=1 → Unity managed externally, skipping launch.")
+        elif config_loader.DEBUG_MODE == 0:
             unity_proc = launch_unity_exe()
             if not unity_proc:
                 print("[Main] Failed to launch Unity. Exiting.")
@@ -961,6 +986,19 @@ async def main() -> None:
             except Exception as e:
                 print(f"[Main] Robot{robot_num} video pipeline failed: {e}")
 
+        # 9) Algorithm submission (RACE_FLAG=1 + Race-type competition + non-headless + race completed only)
+        race_completed = any(c.race_completed for c in robot_clients.values())
+        if config_loader.RACE_FLAG == 1 and config_loader.HEADLESS == 0 and is_comp_mode and race_completed:
+            comp_type = config_loader.get_comp_type(config_loader.GAS_SUBMIT_URL, comp_name)
+            if comp_type and comp_type != "Race":
+                print(f"[Main] {comp_type} competition: skipping algorithm submission.")
+            else:
+                print("[Main] RACE_FLAG=1: Launching algorithm submission...")
+                subprocess.Popen(
+                    [sys.executable, str(Path(__file__).parent / "scripts" / "submit_algorithm.py")],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0,
+                )
+
         print("[Main] System fully stopped.")
 
     except KeyboardInterrupt:
@@ -969,13 +1007,17 @@ async def main() -> None:
 
     finally:
         # Terminate Unity process if we started it
+        # In non-headless mode, skip termination — Unity closes itself after user clicks SUBMIT/CANCEL
         if unity_proc and unity_proc.poll() is None:
-            print("[Main] Terminating Unity process...")
-            unity_proc.terminate()
-            try:
-                unity_proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                unity_proc.kill()
+            if config_loader.HEADLESS == 1:
+                print("[Main] Terminating Unity process...")
+                unity_proc.terminate()
+                try:
+                    unity_proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    unity_proc.kill()
+            else:
+                print("[Main] Unity still running (waiting for user to close panel).")
 
 
 async def _drain_all_tasks() -> None:
@@ -988,6 +1030,15 @@ async def _drain_all_tasks() -> None:
 
 
 if __name__ == "__main__":
+    # Show GUI launcher when HEADLESS=0 (allows editing config before race start)
+    if config_loader.HEADLESS == 0:
+        from launcher import show_launcher
+        if not show_launcher():
+            print("[Main] Launch cancelled.")
+            sys.exit(0)
+        # Reload config after launcher may have written changes
+        config_loader.apply_config()
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:

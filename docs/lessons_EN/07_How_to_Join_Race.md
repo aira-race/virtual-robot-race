@@ -13,29 +13,39 @@ First, try the Time Attack where you drive solo and aim for the fastest time ove
 Complete the rule-based algorithm or AI model you developed during training.
 
 ### Step 2: Configure Race Settings
-Open `Robot1/robot_config.txt` and set the following two items.
+Open `config.txt` in the repository root and set the following items.
 
 #### Player Name
-Set `NAME` to your player name (up to 10 alphanumeric characters) that will appear on the leaderboard. Choose a clear name that distinguishes you from other participants.
+Set `NAME` to your player name that will appear on the leaderboard. Allowed characters: A-Z, a-z, 0-9, and underscore (`_`), up to 16 characters.
 
 ```ini
-# Player name (up to 10 alphanumeric characters, used for leaderboard)
-NAME=Player0000
+# Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
+NAME=aira_Racer_0001
 ```
 
+#### Competition Name
+Set `COMPETITION_NAME` to the competition ID you are joining. For practice, leave it as `Tutorial`.
+
+```ini
+# Competition name: must match a valid competition ID registered on the platform
+COMPETITION_NAME=Tutorial
+```
+
+> **Note (for competition mode)**: When setting a real competition ID, your `NAME` must be pre-registered in the competition sheet. If not registered, an authentication error will appear before the race starts.
+
 #### Race Participation Flag
-Change `RACE_FLAG` to `1`. Setting this to `1` registers your run result on the official leaderboard.
+Change `RACE_FLAG` to `1`. Setting this to `1` submits your result to the official leaderboard.
 
 ```ini
 # Race participation flag:
-# 1 = Participate in race (results will be posted)
-# 0 = Test Run only (no results posted)
+# 1 = Submit result to leaderboard
+# 0 = Test run only (no submission)
 RACE_FLAG=1
 ```
 
 ### Step 3: Drive
 Run `main.py` to start the Time Attack.
-When you finish, your time is automatically registered on the leaderboard.
+When you finish, a **Post Confirmation Panel** appears. Review your result and click **POST** to submit the fastest time to the leaderboard.
 
 **Leaderboard:** [https://aira-race.com/](https://aira-race.com/)
 
@@ -48,7 +58,7 @@ In the next training session, you will compete in direct head-to-head races.
 ### How to Submit
 Compress your entire `Robot1` folder as a ZIP file and submit it to the designated location.
 
-**Submission location:** (Will be announced later)
+**Submission location:** Check the active competition page for the ZIP submission link: [https://aira-race.com/competitions](https://aira-race.com/competitions)
 
 ### Race Format
 - Submitted programs will race two at a time.

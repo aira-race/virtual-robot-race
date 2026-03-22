@@ -25,7 +25,7 @@ This training is intended for:
 
 ---
 
-## 1. Development Environment Requirements — Beta 1.6
+## 1. Development Environment Requirements — Beta 1.7
 First, check the hardware and software requirements for this training.
 
 ### Hardware Requirements
@@ -220,10 +220,10 @@ Let's do a test run to confirm everything is set up correctly.
     ```
 3.  Confirm the following:
     - [ ] The Unity simulator **launches automatically**.
-    - [ ] Two robots start driving the course automatically (default is rule-based mode).
-    - [ ] After the race ends, the `training_data` folder opens and driving data is saved.
+    - [ ] Two robots start driving the course automatically (default is AI mode: `R1_MODE_NUM=4`).
+    - [ ] After the race ends, the Unity window closes automatically.
 
-4.  Check the saved data. If a folder named `run_YYYYMMDD_HHMMSS` was created inside `Robot1/training_data/`, the data was saved successfully.
+    > **💡 Data saving**: By default, `DATA_SAVE=0` (no saving). To save driving data, change `DATA_SAVE=1` in `config.txt` (covered in Lesson 4).
 
 Setup is complete! Well done.
 Let's move on to the next chapter!

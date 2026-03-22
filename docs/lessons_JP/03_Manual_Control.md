@@ -17,38 +17,31 @@ ACTIVE_ROBOTS=1
 
 > **⚠️ 保存を忘れずに！** 編集後は必ずファイルを保存（`Ctrl+S`）してください。保存しないと変更が反映されません。
 
-### 2. ロボットの個別設定 (`Robot1/robot_config.txt`)
-`Robot1` フォルダにある `robot_config.txt` を編集します。
+### 2. ロボットのモード設定 (`config.txt`)
+同じく **ルートフォルダ** の `config.txt` を続けて編集します。
 キーボードで操作し、ログを保存する設定は以下の通りです。
 
 ```ini
+# config.txt
 
-# Player name (up to 10 alphanumeric characters, used for leaderboard)
-NAME=YourName　　# 自分の名前に変更してください
+# Player name: A-Z, a-z, 0-9, _ (underscore), up to 16 characters
+NAME=aira_Racer_0001   # 自分の名前に変更してください
 
-# Robot1/robot_config.txt
-# Control mode:
-# 1 = keyboard
-# 2 = table (CSV playback)
-# 3 = rule_based (autonomous lane following)
-# 4 = ai (neural network inference)
-# 5 = smartphone (smartphone controller via QR code)
-MODE_NUM=1
+# Robot1 control mode:
+# 1 = keyboard  2 = table  3 = rule_based  4 = ai  5 = smartphone
+R1_MODE_NUM=1
 
 # Data saving:
-# 1 = Save CSV and JPEG images during run (also auto-creates MP4 video)
-# 0 = Do not save data (faster, less disk usage, no video)
-# Note: Video settings (FPS, etc.) are fixed in Python code for advanced users
+# 1 = Save CSV and JPEG images during run
+# 0 = Do not save data (faster, less disk usage)
 DATA_SAVE=1
 
 # Race participation flag:
-# 1 = Participate in race (results will be posted)
-# 0 = Test Run only (no results posted)
+# 1 = Submit result to leaderboard
+# 0 = Test run only (no submission)
 RACE_FLAG=0
-
-
 ```
-> `YourName`の部分は、必ずご自身の名前に変更してください。
+> `NAME` の部分は、必ずご自身のプレイヤー名に変更してください（英数字とアンダースコア、最大16文字）。
 
 > 設定方法が不明な場合は、READMEを参照するか、[NotebookLM QAシステム](https://notebooklm.google.com/notebook/1a8a70f1-d30e-4bad-bd01-67b3219cfafa)で質問してください。
 
@@ -101,29 +94,24 @@ RACE_FLAG=0
 ## 5. レッスン課題
 
 以下のステップでマニュアル操作に慣れていきましょう。
-毎回、**① config設定 → ② robot_config設定 → ③ 保存 → ④ `python main.py` 実行** の流れで進めます。
+毎回、**① config.txt を設定 → ② 保存 → ③ `python main.py` 実行** の流れで進めます。
 
 1.  **Robot1で2周完走を目指す**
-    - `config.txt`: `ACTIVE_ROBOTS=1`
-    - `Robot1/robot_config.txt`: `MODE_NUM=1`
+    - `ACTIVE_ROBOTS=1`、`R1_MODE_NUM=1`
     - 保存して `python main.py` を実行し、2周完走を目指しましょう。
 
 2.  **Robot2で2周完走を目指す**
-    - `config.txt`: `ACTIVE_ROBOTS=1`（1台のまま）
-    - `Robot2/robot_config.txt`: `MODE_NUM=1`
+    - `ACTIVE_ROBOTS=1`、`R2_MODE_NUM=1`
     - Robot2のキーボード操作で2周を目指しましょう。
 
 3.  **失敗を体験する**
     - フライング、コースアウト、衝突によるバッテリー切れなど、様々な失格パターンを意図的に試してみましょう。ペナルティの仕組みを体で覚えます。
 
 4.  **AIと併走する**
-    - `config.txt`: `ACTIVE_ROBOTS=2`
-    - `Robot1/robot_config.txt`: `MODE_NUM=1`（自分がキーボード操作）
-    - `Robot2/robot_config.txt`: `MODE_NUM=4`（AIが自動走行）
+    - `ACTIVE_ROBOTS=1,2`、`R1_MODE_NUM=1`、`R2_MODE_NUM=4`
     - AIの走りを観察しながら、後ろから追走してみましょう。
 
 5.  **タイムアタック**
-    - `config.txt`: `ACTIVE_ROBOTS=1`
-    - `Robot1/robot_config.txt`: `MODE_NUM=1`
+    - `ACTIVE_ROBOTS=1`、`R1_MODE_NUM=1`
     - 2周の合計タイムを競いましょう。誰が一番速いか挑戦！
 

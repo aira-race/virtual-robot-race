@@ -1,176 +1,227 @@
-# config.py
-# Reads and applies configuration values from config.txt and Robot{N}/robot_config.txt
+# config_loader.py
+# ============================================================
+# Configuration Loader for Virtual Robot Race - Beta 1.7
+# ============================================================
+# PURPOSE: Reads all settings from a single config.txt at the project root.
+#
+# ARCHITECTURE:
+#   Beta 1.7 unifies global and per-robot settings into one config.txt.
+#   Robot IDs (R1, R2, ...) are derived from ACTIVE_ROBOTS automatically.
+#   Per-robot MODE_NUM is specified with a prefix: R1_MODE_NUM, R2_MODE_NUM.
+#
+# USAGE:
+#   import config_loader
+#   config_loader.HOST          → "localhost"
+#   config_loader.ACTIVE_ROBOTS → [1, 2]
+#   config_loader.get_robot_config(1) → dict with robot-specific settings
+# ============================================================
 
 import os
 import re
 from pathlib import Path
 
 CONFIG_PATH = "config.txt"
+PLAYER_SECRET_PATH = "player_secret.txt"
 
-# Default values for global config (config.txt)
+# Default values for all settings in config.txt
 DEFAULT_CONFIG = {
-    "HOST": "localhost",
-    "PORT": 12346,
-    "ACTIVE_ROBOTS": "1",   # Active robots (comma-separated)
-    "DEBUG_MODE": 0,        # 0: Launch Unity automatically, 1: Launch manually (debug)
-}
-
-# Default values for robot-specific config (Robot{N}/robot_config.txt)
-DEFAULT_ROBOT_CONFIG = {
-    "MODE_NUM": 1,          # 1: keyboard, 2: table, 3: rule_based, 4: ai, 5: smartphone, 6: rl_training
-    "ROBOT_ID": "R1",       # Robot ID (e.g., R1, R2, ...)
-    "NAME": "Player0000",   # Player name (up to 10 alphanumeric chars)
-    "RACE_FLAG": 1,         # 1: participate (POST), 0: watch only
-    "DATA_SAVE": 1,         # 1: Save images, 0: Do not save
+    # Player
+    "NAME":         "Player0000",   # Player name (alphanumeric, up to 16 chars)
+    "COMPETITION_NAME":    "Tutorial",      # Competition name (Tutorial = tutorial mode)
+    # Network
+    "HOST":         "localhost",
+    "PORT":         12346,
+    # System
+    "ACTIVE_ROBOTS": "1",           # Comma-separated active robot numbers
+    "HEADLESS":     0,              # 0=GUI/CLI launcher, 1=immediate start
+    "DEBUG_MODE":   0,              # 0=auto-launch Unity, 1=manual launch
+    # Data & Race
+    "DATA_SAVE":    1,              # 1=save images/CSV/video, 0=skip
+    "RACE_FLAG":    0,              # 1=submit to leaderboard, 0=test only
+    "X_POST_FLAG":  0,              # 1=post to X on finish, 0=skip
+    # Robot modes (per-robot, prefix R1_ / R2_)
+    "R1_MODE_NUM":  1,              # 1=keyboard,2=table,3=rule_based,4=ai,5=smartphone
+    "R2_MODE_NUM":  1,
 }
 
 # Keys that should be parsed as integers
 INT_KEYS = {
     "PORT",
-    "MODE_NUM",
+    "HEADLESS",
     "DEBUG_MODE",
     "DATA_SAVE",
     "RACE_FLAG",
+    "X_POST_FLAG",
+    "R1_MODE_NUM",
+    "R2_MODE_NUM",
 }
 
-# Global config storage
+# Global config storage (populated by apply_config())
 CONFIG = DEFAULT_CONFIG.copy()
 
-# Robot configs storage (indexed by robot number: 1, 2, 3, 4, 5)
+# Robot configs cache (indexed by robot number: 1, 2, ...)
 ROBOT_CONFIGS = {}
 
+
 def _strip_inline_comment(value: str) -> str:
-    """
-    Remove inline comments starting with '#'.
-    Example: 'Andy00   # comment' -> 'Andy00'
-    """
-    parts = value.split('#', 1)
-    return parts[0].strip()
+    """Remove inline comments starting with '#'. 'Andy00  # comment' -> 'Andy00'"""
+    return value.split('#', 1)[0].strip()
+
 
 def _strip_quotes(value: str) -> str:
-    """
-    Remove single or double quotes around the value, if present.
-    Example: '"Andy00"' -> 'Andy00'
-    """
-    if (len(value) >= 2) and ((value[0] == value[-1]) and value.startswith(("'", '"'))):
+    """Remove surrounding single or double quotes. '"Andy00"' -> 'Andy00'"""
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
         return value[1:-1]
     return value
 
-def _load_config_file(file_path: str, defaults: dict, target_dict: dict) -> None:
-    """Generic config file loader with inline-comment support."""
-    if not os.path.exists(file_path):
-        print(f"[Config] {file_path} not found. Using default settings.")
+
+def load_config() -> None:
+    """Load all settings from config.txt into CONFIG dict."""
+    if not os.path.exists(CONFIG_PATH):
+        print(f"[Config] {CONFIG_PATH} not found. Using defaults.")
         return
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             for raw in f:
                 line = raw.strip()
-                if not line or line.startswith("#"):
-                    continue
-                if "=" not in line:
+                if not line or line.startswith("#") or "=" not in line:
                     continue
 
                 key, value = line.split("=", 1)
                 key = key.strip()
-                value = value.strip()
+                value = _strip_quotes(_strip_inline_comment(value.strip()))
 
-                value = _strip_inline_comment(value)
-                value = _strip_quotes(value)
-
-                if key in defaults:
+                if key in DEFAULT_CONFIG:
                     if key in INT_KEYS:
                         try:
-                            target_dict[key] = int(value)
-                        except Exception:
+                            CONFIG[key] = int(value)
+                        except ValueError:
                             print(f"[Config] WARNING: Invalid integer for {key}='{value}'. Using default.")
-                            target_dict[key] = defaults[key]
+                            CONFIG[key] = DEFAULT_CONFIG[key]
                     else:
-                        target_dict[key] = value
-                # Unknown keys are ignored silently (forward compatibility)
+                        CONFIG[key] = value
+                # Unknown keys are silently ignored (forward compatibility)
+
     except Exception as e:
-        print(f"[Config] Failed to read {file_path}: {e}")
+        print(f"[Config] Failed to read {CONFIG_PATH}: {e}")
 
-
-def load_config():
-    """Load key-value pairs from config.txt (global settings)."""
-    _load_config_file(CONFIG_PATH, DEFAULT_CONFIG, CONFIG)
-
-
-def load_robot_config(robot_num: int) -> dict:
-    """
-    Load robot-specific config from Robot{N}/robot_config.txt.
-    Returns a dict with robot-specific settings.
-    """
-    robot_config = DEFAULT_ROBOT_CONFIG.copy()
-    robot_dir = Path(f"Robot{robot_num}")
-    config_file = robot_dir / "robot_config.txt"
-
-    if config_file.exists():
-        _load_config_file(str(config_file), DEFAULT_ROBOT_CONFIG, robot_config)
-        print(f"[Config] Loaded config for Robot{robot_num} from {config_file}")
-    else:
-        print(f"[Config] Robot{robot_num} config not found at {config_file}. Using defaults.")
-
-    # Override ROBOT_ID based on robot number if not explicitly set
-    if robot_config.get("ROBOT_ID") == "R1":  # Default value
-        robot_config["ROBOT_ID"] = f"R{robot_num}"
-
-    # Auto-enable video creation when DATA_SAVE=1
-    # Fixed parameters (advanced users can modify these constants in this file)
-    if robot_config.get("DATA_SAVE", 1) == 1:
-        robot_config["AUTO_MAKE_VIDEO"] = 1
-        robot_config["VIDEO_FPS"] = 20
-        robot_config["INFER_FPS"] = 1
-    else:
-        robot_config["AUTO_MAKE_VIDEO"] = 0
-        robot_config["VIDEO_FPS"] = 20  # Set defaults even when not used
-        robot_config["INFER_FPS"] = 1
-
-    return robot_config
 
 def validate_name(name: str) -> str:
     """
-    Validate NAME:
-      - Must be alphanumeric (A-Z, a-z, 0-9)
-      - Must be 10 characters or fewer
-      - If invalid, fallback to default and print a warning
+    Validate NAME: alphanumeric and underscore, 1-16 characters.
+    Returns the name if valid, or the default if not.
     """
-    if re.fullmatch(r"[A-Za-z0-9]{1,10}", name or ""):
+    if re.fullmatch(r"[A-Za-z0-9_]{1,16}", name or ""):
         return name
-    print(f"[Config] WARNING: Invalid NAME='{name}'. Must be <=10 alphanumeric characters. Using default.")
+    print(f"[Config] WARNING: Invalid NAME='{name}'. Must be 1-16 alphanumeric characters or underscores. Using default.")
     return DEFAULT_CONFIG["NAME"]
 
-def apply_config():
-    """Apply loaded global config values as module-level variables."""
-    global HOST, PORT, ACTIVE_ROBOTS, DEBUG_MODE
+
+def _build_robot_config(robot_num: int) -> dict:
+    """
+    Build a per-robot config dict from the unified config.txt.
+    ROBOT_ID is derived from robot_num (1 -> "R1", 2 -> "R2", ...).
+    MODE_NUM is read from R{N}_MODE_NUM in the global config.
+    Other settings (NAME, DATA_SAVE, RACE_FLAG, etc.) are shared globals.
+    """
+    robot_id = f"R{robot_num}"
+    mode_key = f"R{robot_num}_MODE_NUM"
+    mode_num = CONFIG.get(mode_key, DEFAULT_CONFIG.get("R1_MODE_NUM", 1))
+
+    data_save = CONFIG.get("DATA_SAVE", 1)
+
+    robot_config = {
+        "ROBOT_ID":     robot_id,
+        "NAME":         validate_name(CONFIG.get("NAME", DEFAULT_CONFIG["NAME"])),
+        "COMPETITION_NAME":    CONFIG.get("COMPETITION_NAME", DEFAULT_CONFIG["COMPETITION_NAME"]),
+        "PLAYER_TOKEN": load_player_token(),
+        "MODE_NUM":     mode_num,
+        "DATA_SAVE":    data_save,
+        "RACE_FLAG":    CONFIG.get("RACE_FLAG", 0),
+        "X_POST_FLAG":  CONFIG.get("X_POST_FLAG", 0),
+        "HEADLESS":     CONFIG.get("HEADLESS", 0),
+        # Video settings derived from DATA_SAVE (advanced users can adjust constants here)
+        "AUTO_MAKE_VIDEO": 1 if data_save == 1 else 0,
+        "VIDEO_FPS":    20,
+        "INFER_FPS":    1,
+    }
+
+    print(f"[Config] Robot{robot_num}: id={robot_id}, mode={get_mode_string(mode_num)}, "
+          f"data_save={data_save}, race_flag={robot_config['RACE_FLAG']}")
+    return robot_config
+
+
+def load_player_secret() -> dict:
+    """
+    Load PLAYER_TOKEN and GAS_SUBMIT_URL from player_secret.txt (gitignored).
+    Returns dict with both keys, empty strings if not found.
+    """
+    result = {"PLAYER_TOKEN": "", "GAS_SUBMIT_URL": ""}
+    if not os.path.exists(PLAYER_SECRET_PATH):
+        return result
+    try:
+        with open(PLAYER_SECRET_PATH, "r", encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                for key in result:
+                    if line.startswith(f"{key}="):
+                        result[key] = line.split("=", 1)[1].strip()
+    except Exception as e:
+        print(f"[Config] Failed to read {PLAYER_SECRET_PATH}: {e}")
+    return result
+
+
+def load_player_token() -> str:
+    """Load PLAYER_TOKEN from player_secret.txt. Returns empty string if not found."""
+    return load_player_secret()["PLAYER_TOKEN"]
+
+
+def apply_config() -> None:
+    """
+    Load config.txt and expose settings as module-level variables.
+    Also pre-builds robot configs for all active robots.
+    Called automatically at import time.
+    """
+    global HOST, PORT, ACTIVE_ROBOTS, HEADLESS, DEBUG_MODE
+    global NAME, COMPETITION_NAME, DATA_SAVE, RACE_FLAG, X_POST_FLAG
+    global PLAYER_TOKEN, GAS_SUBMIT_URL
 
     load_config()
 
-    HOST = CONFIG["HOST"]
-    PORT = CONFIG["PORT"]
-    DEBUG_MODE = CONFIG["DEBUG_MODE"]
+    HOST        = CONFIG["HOST"]
+    PORT        = CONFIG["PORT"]
+    HEADLESS    = CONFIG["HEADLESS"]
+    DEBUG_MODE  = CONFIG["DEBUG_MODE"]
+    NAME        = validate_name(CONFIG["NAME"])
+    COMPETITION_NAME   = CONFIG["COMPETITION_NAME"]
+    DATA_SAVE   = CONFIG["DATA_SAVE"]
+    RACE_FLAG   = CONFIG["RACE_FLAG"]
+    X_POST_FLAG = CONFIG["X_POST_FLAG"]
+    secret       = load_player_secret()
+    PLAYER_TOKEN = secret["PLAYER_TOKEN"]
+    GAS_SUBMIT_URL = secret["GAS_SUBMIT_URL"]
 
-    # Parse active robots list
+    # Parse comma-separated robot numbers into a list of ints: "1,2" -> [1, 2]
     ACTIVE_ROBOTS = [int(r.strip()) for r in CONFIG.get("ACTIVE_ROBOTS", "1").split(",")]
 
-    # Load all robot configs
+    # Pre-build robot configs for all active robots
     for robot_num in ACTIVE_ROBOTS:
-        ROBOT_CONFIGS[robot_num] = load_robot_config(robot_num)
+        ROBOT_CONFIGS[robot_num] = _build_robot_config(robot_num)
 
 
 def get_robot_config(robot_num: int) -> dict:
     """
-    Get config for a specific robot.
-    If not loaded yet, load it on demand.
+    Get config dict for a specific robot number.
+    Builds on demand if not already cached.
     """
     if robot_num not in ROBOT_CONFIGS:
-        ROBOT_CONFIGS[robot_num] = load_robot_config(robot_num)
+        ROBOT_CONFIGS[robot_num] = _build_robot_config(robot_num)
     return ROBOT_CONFIGS[robot_num]
 
 
 def get_mode_string(mode_num: int) -> str:
-    """Convert MODE_NUM to mode string."""
+    """Convert MODE_NUM integer to mode name string."""
     MODE_MAP = {
         1: "keyboard",
         2: "table",
@@ -182,5 +233,31 @@ def get_mode_string(mode_num: int) -> str:
     return MODE_MAP.get(mode_num, "keyboard")
 
 
-# Initialize global settings at import time
+def get_comp_type(gas_url: str, comp_name: str) -> str:
+    """
+    Query GAS for competition type (e.g. "Race", "TimeAttack", "Tutorial").
+    Returns empty string on network error (caller should fail open).
+    """
+    import json
+    import urllib.request
+    import urllib.error
+
+    if not gas_url or not comp_name:
+        return ""
+    try:
+        data = json.dumps({"type": "get_comp_type", "comp_name": comp_name}).encode("utf-8")
+        req  = urllib.request.Request(
+            gas_url, data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result.get("comp_type", "")
+    except Exception as e:
+        print(f"[Config] WARNING: Could not fetch competition type ({e}). Proceeding.")
+        return ""
+
+
+# Initialize at import time
 apply_config()

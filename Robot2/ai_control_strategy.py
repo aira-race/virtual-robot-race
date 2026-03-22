@@ -67,6 +67,11 @@ STRATEGY = "hybrid"
 # - False: Let AI decide when to start (requires extensive training data)
 HYBRID_START_DETECTION = True
 
+# Timeout for start signal detection (in frames, ~20 frames = 1 second)
+# If no red lamps are detected for this many frames, assume race already started.
+# This handles the case where AI mode is started after the race has begun.
+START_DETECTION_TIMEOUT_FRAMES = 60  # ~3 seconds
+
 # Future expansion examples (not yet implemented):
 # HYBRID_PITSTOP_DETECTION = False  # Pit stop timing
 # HYBRID_EMERGENCY_BRAKE = False    # Collision avoidance
@@ -97,14 +102,38 @@ def should_wait_for_start(pil_img, race_started):
         # Trust the model completely
         return False
 
+    # Initialize detection state
+    if not hasattr(should_wait_for_start, '_start_detected'):
+        should_wait_for_start._start_detected = False
+        should_wait_for_start._wait_frames = 0
+
+    # If start was already detected, don't wait anymore
+    if should_wait_for_start._start_detected:
+        return False  # GO! (start already detected in previous frame)
+
     # Hybrid mode: use rule-based start detection
     if not race_started and HYBRID_START_DETECTION:
         # detect_start_signal is loaded at module level using importlib
-        # Wait unless start signal is detected
         if detect_start_signal(pil_img):
+            should_wait_for_start._start_detected = True  # Remember we detected start
+            should_wait_for_start._wait_frames = 0
+            print("[Strategy] Red lamps OFF detected! Race started.")
             return False  # GO!
-        else:
-            return True   # Keep waiting
+
+        # Check if red lamps were ever detected (ready_to_go flag in perception module)
+        lamps_detected = getattr(detect_start_signal, 'ready_to_go', False)
+
+        # Increment wait counter
+        should_wait_for_start._wait_frames += 1
+
+        # Timeout: If no red lamps detected for a while, assume race already started
+        if not lamps_detected and should_wait_for_start._wait_frames >= START_DETECTION_TIMEOUT_FRAMES:
+            print(f"[Strategy] Timeout: No red lamps detected for {START_DETECTION_TIMEOUT_FRAMES} frames. Assuming race started.")
+            should_wait_for_start._start_detected = True
+            should_wait_for_start._wait_frames = 0
+            return False  # GO! (assume race already running)
+
+        return True   # Keep waiting
 
     return False
 

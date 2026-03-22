@@ -15,37 +15,31 @@ For this session, practice with a single robot by setting it as follows:
 ACTIVE_ROBOTS=1
 ```
 
-### 2. Robot-Specific Settings (`Robot1/robot_config.txt`)
-Edit `robot_config.txt` in the `Robot1` folder.
+### 2. Robot Mode Settings (`config.txt`)
+Continue editing the same `config.txt` in the project root.
 The settings for keyboard control with log saving are:
 
 ```ini
+# config.txt
 
-# Player name (up to 10 alphanumeric characters, used for leaderboard)
-NAME=YourName    # Change this to your own name
+# Player name: A-Z, a-z, 0-9, _ (underscore), up to 16 characters
+NAME=aira_Racer_0001   # Change this to your own player name
 
-# Robot1/robot_config.txt
-# Control mode:
-# 1 = keyboard
-# 2 = table (CSV playback)
-# 3 = rule_based (autonomous lane following)
-# 4 = ai (neural network inference)
-# 5 = smartphone (smartphone controller via QR code)
-MODE_NUM=1
+# Robot1 control mode:
+# 1 = keyboard  2 = table  3 = rule_based  4 = ai  5 = smartphone
+R1_MODE_NUM=1
 
 # Data saving:
-# 1 = Save CSV and JPEG images during run (also auto-creates MP4 video)
-# 0 = Do not save data (faster, less disk usage, no video)
-# Note: Video settings (FPS, etc.) are fixed in Python code for advanced users
+# 1 = Save CSV and JPEG images during run
+# 0 = Do not save data (faster, less disk usage)
 DATA_SAVE=1
 
 # Race participation flag:
-# 1 = Participate in race (results will be posted)
-# 0 = Test Run only (no results posted)
+# 1 = Submit result to leaderboard
+# 0 = Test run only (no submission)
 RACE_FLAG=0
-
 ```
-> Be sure to change `YourName` to your own name.
+> Be sure to change `NAME` to your own player name (A-Z, a-z, 0-9, underscore, up to 16 characters).
 
 > If you are unsure how to configure this, refer to the README or ask the Q&A system.
 
@@ -97,8 +91,10 @@ This is an important interface that communicates your inputs (throttle, steering
 
 Work through the following steps to get comfortable with manual control.
 
-1.  **One lap with Robot1:** Start with just Robot1 (single mode) and drive one lap around the course.
-2.  **One lap with Robot2:** Next, try one lap with just Robot2 (single mode).
+Each task follows this flow: **① Edit config.txt → ② Save → ③ Run `python main.py`**
+
+1.  **Complete 2 laps with Robot1:** Set `ACTIVE_ROBOTS=1`, `R1_MODE_NUM=1`. Drive to finish 2 laps.
+2.  **Complete 2 laps with Robot2:** Set `ACTIVE_ROBOTS=1`, `R2_MODE_NUM=1`. Try with Robot2 in keyboard mode.
 3.  **Experience failures:** Try out various disqualification scenarios — false starts, course outs, battery drain from collisions, etc.
-4.  **Race alongside the AI:** Set Robot2 to AI mode, then chase it as Robot1 (keyboard mode).
-5.  **Time attack:** Finally, go back to single mode (Robot1) and challenge everyone to the fastest time!
+4.  **Race alongside the AI:** Set `ACTIVE_ROBOTS=1,2`, `R1_MODE_NUM=1`, `R2_MODE_NUM=4`. Chase the AI as Robot1.
+5.  **Time attack:** Set `ACTIVE_ROBOTS=1`, `R1_MODE_NUM=1`. Go for the fastest 2-lap time!

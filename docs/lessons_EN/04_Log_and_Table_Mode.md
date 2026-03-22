@@ -110,13 +110,10 @@ This file is very simple — it has only 3 columns:
 ### Task 1: Reproduce a Run from Log Data
 
 1.  **Prerequisites**
-    - Set `ACTIVE_ROBOTS` to `1` in `config.txt`.
-    - Edit `Robot1/robot_config.txt` as follows:
+    - Set the following in `config.txt`:
       ```ini
-
-      MODE_NUM=2
-
-
+      ACTIVE_ROBOTS=1
+      R1_MODE_NUM=2
       ```
 
 2.  **Create table data**
