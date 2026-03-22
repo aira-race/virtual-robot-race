@@ -152,22 +152,29 @@ def _build_robot_config(robot_num: int) -> dict:
     return robot_config
 
 
-def load_player_token() -> str:
+def load_player_secret() -> dict:
     """
-    Load PLAYER_TOKEN from player_secret.txt (gitignored).
-    Returns the token string, or empty string if file not found.
+    Load PLAYER_TOKEN and GAS_SUBMIT_URL from player_secret.txt (gitignored).
+    Returns dict with both keys, empty strings if not found.
     """
+    result = {"PLAYER_TOKEN": "", "GAS_SUBMIT_URL": ""}
     if not os.path.exists(PLAYER_SECRET_PATH):
-        return ""
+        return result
     try:
         with open(PLAYER_SECRET_PATH, "r", encoding="utf-8") as f:
             for raw in f:
                 line = raw.strip()
-                if line.startswith("PLAYER_TOKEN="):
-                    return line.split("=", 1)[1].strip()
+                for key in result:
+                    if line.startswith(f"{key}="):
+                        result[key] = line.split("=", 1)[1].strip()
     except Exception as e:
         print(f"[Config] Failed to read {PLAYER_SECRET_PATH}: {e}")
-    return ""
+    return result
+
+
+def load_player_token() -> str:
+    """Load PLAYER_TOKEN from player_secret.txt. Returns empty string if not found."""
+    return load_player_secret()["PLAYER_TOKEN"]
 
 
 def apply_config() -> None:
@@ -178,7 +185,7 @@ def apply_config() -> None:
     """
     global HOST, PORT, ACTIVE_ROBOTS, HEADLESS, DEBUG_MODE
     global NAME, COMPETITION_NAME, DATA_SAVE, RACE_FLAG, X_POST_FLAG
-    global PLAYER_TOKEN
+    global PLAYER_TOKEN, GAS_SUBMIT_URL
 
     load_config()
 
@@ -191,7 +198,9 @@ def apply_config() -> None:
     DATA_SAVE   = CONFIG["DATA_SAVE"]
     RACE_FLAG   = CONFIG["RACE_FLAG"]
     X_POST_FLAG = CONFIG["X_POST_FLAG"]
-    PLAYER_TOKEN = load_player_token()
+    secret       = load_player_secret()
+    PLAYER_TOKEN = secret["PLAYER_TOKEN"]
+    GAS_SUBMIT_URL = secret["GAS_SUBMIT_URL"]
 
     # Parse comma-separated robot numbers into a list of ints: "1,2" -> [1, 2]
     ACTIVE_ROBOTS = [int(r.strip()) for r in CONFIG.get("ACTIVE_ROBOTS", "1").split(",")]
@@ -222,6 +231,32 @@ def get_mode_string(mode_num: int) -> str:
         6: "rl_training",
     }
     return MODE_MAP.get(mode_num, "keyboard")
+
+
+def get_comp_type(gas_url: str, comp_name: str) -> str:
+    """
+    Query GAS for competition type (e.g. "Race", "TimeAttack", "Tutorial").
+    Returns empty string on network error (caller should fail open).
+    """
+    import json
+    import urllib.request
+    import urllib.error
+
+    if not gas_url or not comp_name:
+        return ""
+    try:
+        data = json.dumps({"type": "get_comp_type", "comp_name": comp_name}).encode("utf-8")
+        req  = urllib.request.Request(
+            gas_url, data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result.get("comp_type", "")
+    except Exception as e:
+        print(f"[Config] WARNING: Could not fetch competition type ({e}). Proceeding.")
+        return ""
 
 
 # Initialize at import time

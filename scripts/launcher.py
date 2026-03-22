@@ -39,6 +39,8 @@ SECRET_PATH  = Path("player_secret.txt")
 TOKEN_OK  = "#00C878"   # Green — token saved
 TOKEN_NG  = "#FF8C00"   # Amber — token missing
 
+GAS_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbznske4j3QuZl3_nMmmXE3L_fs7LtTpjyBSq0v-T8PE_Z_iu4-_xEoXZoJCKpSZ2hhZ/exec"
+
 
 # ── Config I/O ────────────────────────────────────────────────────────────────
 
@@ -73,8 +75,12 @@ def _read_token() -> str:
 
 
 def _write_token(token: str) -> None:
-    """Write PLAYER_TOKEN to player_secret.txt."""
-    SECRET_PATH.write_text(f"PLAYER_TOKEN={token}\n", encoding="utf-8")
+    """Write PLAYER_TOKEN and GAS_SUBMIT_URL to player_secret.txt."""
+    SECRET_PATH.write_text(
+        f"PLAYER_TOKEN={token}\n"
+        f"GAS_SUBMIT_URL={GAS_SUBMIT_URL}\n",
+        encoding="utf-8",
+    )
 
 
 # ── Widgets ───────────────────────────────────────────────────────────────────

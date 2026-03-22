@@ -257,9 +257,11 @@ async def build_video_and_open_explorer(robot_config: dict) -> None:
 
     await loop.run_in_executor(None, _encode)
 
-    # Open file manager only in interactive (non-headless) mode
+    # Open file manager only in interactive (non-headless) mode and when X_POST_FLAG=1
     if robot_config.get("HEADLESS", 0) == 1:
         print("[Main] Headless mode: Skipping explorer popup.")
+    elif robot_config.get("X_POST_FLAG", 0) == 0:
+        print("[Main] X_POST_FLAG=0: Skipping explorer popup.")
     else:
         try:
             if sys.platform.startswith("win") and out_path.exists():
@@ -984,6 +986,19 @@ async def main() -> None:
             except Exception as e:
                 print(f"[Main] Robot{robot_num} video pipeline failed: {e}")
 
+        # 9) Algorithm submission (RACE_FLAG=1 + Race-type competition + non-headless + race completed only)
+        race_completed = any(c.race_completed for c in robot_clients.values())
+        if config_loader.RACE_FLAG == 1 and config_loader.HEADLESS == 0 and is_comp_mode and race_completed:
+            comp_type = config_loader.get_comp_type(config_loader.GAS_SUBMIT_URL, comp_name)
+            if comp_type and comp_type != "Race":
+                print(f"[Main] {comp_type} competition: skipping algorithm submission.")
+            else:
+                print("[Main] RACE_FLAG=1: Launching algorithm submission...")
+                subprocess.Popen(
+                    [sys.executable, str(Path(__file__).parent / "scripts" / "submit_algorithm.py")],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0,
+                )
+
         print("[Main] System fully stopped.")
 
     except KeyboardInterrupt:
@@ -992,13 +1007,17 @@ async def main() -> None:
 
     finally:
         # Terminate Unity process if we started it
+        # In non-headless mode, skip termination — Unity closes itself after user clicks SUBMIT/CANCEL
         if unity_proc and unity_proc.poll() is None:
-            print("[Main] Terminating Unity process...")
-            unity_proc.terminate()
-            try:
-                unity_proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                unity_proc.kill()
+            if config_loader.HEADLESS == 1:
+                print("[Main] Terminating Unity process...")
+                unity_proc.terminate()
+                try:
+                    unity_proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    unity_proc.kill()
+            else:
+                print("[Main] Unity still running (waiting for user to close panel).")
 
 
 async def _drain_all_tasks() -> None:

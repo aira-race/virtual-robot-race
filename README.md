@@ -101,22 +101,23 @@ You'll see `(.venv)` at the start of your command line when the virtual environm
 
 ### GPU Acceleration (Recommended for AI Training)
 
-If you have an **NVIDIA GPU** and want faster AI model training, install the CUDA-enabled PyTorch:
+> **Note**: `pip install -r requirements.txt` installs the **CPU version** of PyTorch by default.
+> If you have an NVIDIA GPU, replace it with the CUDA version after setup:
 
 ```bash
 .venv\Scripts\activate
-pip uninstall torch torchvision -y
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+pip uninstall torch torchvision torchaudio -y
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
 **Verify GPU is detected:**
 ```bash
-python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
 
-> **No GPU?** The default CPU version works fine for inference (running the AI). GPU mainly speeds up training.
+> **No GPU?** The CPU version works fine for inference (running the AI during a race). GPU mainly speeds up training.
 
-> **CUDA version**: This project uses CUDA 12.4. If you have an older GPU or driver, try `cu118` instead of `cu124`.
+> **CUDA version**: `cu124` supports CUDA 12.4+. For older drivers, check your version with `nvidia-smi` and use `cu118` if needed.
 
 ---
 
@@ -336,6 +337,28 @@ RACE_FLAG=0
 3. **Deploy**: Copy trained `model.pth` to `Robot*/models/`
 4. **Race**: Run with MODE_NUM=4 (AI control)
 5. **Iterate**: Analyze results and improve
+
+## Algorithm Submission (Race competitions)
+
+After joining a Race competition on [aira-race.com](https://aira-race.com), you can submit your algorithm to the organizer.
+
+**Automatic (recommended):**
+Set `RACE_FLAG=1` in the launcher — the submission tool launches automatically after each race.
+
+**Manual:**
+```bash
+python scripts/submit_algorithm.py
+```
+
+The tool collects your `Robot1/` (or `Robot2/`) algorithm files, packages them as a ZIP, and uploads securely via your Player Token.
+
+> **Headless loop users**: Auto-submission is skipped during headless training loops (`HEADLESS=1`).
+> Run the submission tool manually when your training is complete.
+
+> **Note on upload reliability**: The submission tool uploads your new ZIP first, then removes the previous one.
+> If a network error occurs mid-upload, your previous submission remains active on the server.
+> Always confirm "Submission complete" appears before closing the window.
+> The organizers are not responsible for data loss caused by connection issues during upload.
 
 ---
 

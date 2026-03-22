@@ -16,6 +16,7 @@ class RobotWebSocketClient:
         self.server_url = server_url
         self.websocket = None
         self.running = False
+        self.race_completed = False  # True only when race_ended received from Unity
         self.robot_config = robot_config or {}
         self.active_robots = active_robots  # List of active robot numbers [1, 2, ...]
 
@@ -167,6 +168,7 @@ class RobotWebSocketClient:
 
             elif msg_type == "race_ended":
                 print(f"[{self.robot_id}] Race ended signal received from Unity. Stopping.")
+                self.race_completed = True
                 self.running = False
                 if self.websocket:
                     await self.websocket.close()
