@@ -292,25 +292,34 @@ def show_launcher() -> bool:
 
     # ── Run options ───────────────────────────────────────────
     _section(root, "RUN OPTIONS")
-    data_var = tk.IntVar(value=int(cfg.get("DATA_SAVE", "0")))
-    race_var = tk.IntVar(value=int(cfg.get("RACE_FLAG", "0")))
-    _row(root, "Data save",  lambda p: _toggle(p, data_var, "ON", "OFF"))
-    _row(root, "Race flag",  lambda p: _toggle(p, race_var, "SUBMIT", "TEST ONLY"))
+    data_var  = tk.IntVar(value=int(cfg.get("DATA_SAVE",   "0")))
+    race_var  = tk.IntVar(value=int(cfg.get("RACE_FLAG",   "0")))
+    xpost_var = tk.IntVar(value=int(cfg.get("X_POST_FLAG", "0")))
+    _row(root, "Data save",  lambda p: _toggle(p, data_var,  "ON",     "OFF"))
+    _row(root, "Race flag",  lambda p: _toggle(p, race_var,  "SUBMIT", "TEST ONLY"))
+
+    # X Post row — hidden until RACE_FLAG=SUBMIT
+    xpost_section = tk.Frame(root, bg=BG)
+    xpost_row = tk.Frame(xpost_section, bg=BG)
+    xpost_row.pack(fill="x", padx=24, pady=5)
+    tk.Label(xpost_row, text="X Post", bg=BG, fg=MUTED,
+             font=FONT_UI, width=13, anchor="w").pack(side="left")
+    _toggle(xpost_row, xpost_var, "ON", "OFF").pack(side="left")
 
     def _on_race_flag_change(*_):
         is_submit = (race_var.get() == 1)
         if is_submit:
+            xpost_section.pack(fill="x", before=spacer_frame)
             token_section.pack(fill="x", before=spacer_frame)
             _update_token_status()
-            root.geometry(f"{W}x570+{x}+{y}")
+            root.geometry(f"{W}x600+{x}+{y}")
         else:
+            xpost_section.pack_forget()
             token_section.pack_forget()
             root.geometry(f"{W}x490+{x}+{y}")
 
     race_var.trace_add("write", _on_race_flag_change)
 
-    # Show token section immediately if RACE_FLAG=1 on launch
-    # Show token section on launch if RACE_FLAG=1 (after all widgets are created)
     if race_var.get() == 1:
         root.after(0, _on_race_flag_change)
 
@@ -369,6 +378,7 @@ def show_launcher() -> bool:
         _write_config_value("R2_MODE_NUM",      MODE_TO_NUM[r2_var.get()])
         _write_config_value("DATA_SAVE",        str(data_var.get()))
         _write_config_value("RACE_FLAG",        str(race_var.get()))
+        _write_config_value("X_POST_FLAG",      str(xpost_var.get() if race_var.get() == 1 else 0))
         result["start"] = True
         root.destroy()
 

@@ -42,17 +42,17 @@ DEBUG_MODE=0
 # 1 = Save data for active robots
 # 0 = Do not save (faster, less disk usage)
 # Note: Set to 1 when using HEADLESS=1 (training loops require saved data)
-DATA_SAVE=0
+DATA_SAVE=1
 
 # Race participation flag:
 # 1 = Submit result to leaderboard
 # 0 = Test run only (no submission)
-RACE_FLAG=0
+RACE_FLAG=1
 
 # Post to X (Twitter) on race completion:
 # 1 = Post result to X
 # 0 = Do not post
-X_POST_FLAG=0
+X_POST_FLAG=1
 
 # ===== Robot Modes =====
 # Control mode per robot:
