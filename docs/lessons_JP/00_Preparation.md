@@ -169,16 +169,7 @@ git merge main             # main（本家の変更）を dev に取り込む
     > ```
     > プロンプトに `(.venv)` が表示されれば有効化完了です。以降の作業はこのターミナルで行います。
 
-### Step 4: AIモデルのダウンロード
-AIモードで使用する学習済みモデル（`model.pth`）を手動でダウンロードして配置します。
-
-1.  [こちらから `model.pth` をダウンロード](https://drive.google.com/file/d/1NDL3A2lWDgXdy7OUWctyoR35jtYqthWD/view?usp=sharing)してください。
-    > **⚠️ 注意**: リンクを開くとGoogle Driveのページが表示されます。フォルダのように見えてつい中に入りたくなりますが、**階層を移動せず、そのページの `model.pth` を直接ダウンロード**してください。（ページ右上のダウンロードボタン、または右クリック→「ダウンロード」）
-2.  ダウンロードした `model.pth` ファイルを、以下の**両方**のフォルダにコピーしてください。
-    - `Robot1/models/model.pth`
-    - `Robot2/models/model.pth`
-
-### Step 5: VS Code の設定
+### Step 4: VS Code の設定
 最後に、`Visual Studio Code` の設定を行います。
 
 1.  **プロジェクトフォルダを開く**

@@ -90,8 +90,8 @@ def analyze_startsignal(
         SignalResult: Detailed detection result
     """
     width, height = img.size
-    top = 0
-    bottom = int(height * 0.2)
+    top = int(height * 0.05)
+    bottom = int(height * 0.30)
 
     # Three lamp regions
     lamp_positions = [

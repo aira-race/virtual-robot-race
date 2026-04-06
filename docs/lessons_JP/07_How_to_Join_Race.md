@@ -56,9 +56,9 @@ RACE_FLAG=1
 次回のレッスンでは、参加者同士の直接対決を行います。
 
 ### 提出方法
-あなたが開発した `Robot1` フォルダ全体をZIP形式で圧縮し、指定の場所に提出してください。
+アルゴリズムの提出方法や提出期限は、参加中のコンペティションページで確認してください。
 
-**提出先:** 参加中のコンペページで ZIP 提出リンクを確認してください: [https://aira-race.com/competitions](https://aira-race.com/competitions)
+**コンペティションページ:** [https://aira-race.com/competitions/](https://aira-race.com/competitions/)
 
 ### レース形式
 - 提出されたプログラムを使い、2台ずつでレースを行います。
