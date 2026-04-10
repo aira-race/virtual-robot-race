@@ -24,12 +24,12 @@ PORT=12346
 # Active robots (comma-separated)
 # Example: ACTIVE_ROBOTS=1      → Robot1 only
 # Example: ACTIVE_ROBOTS=1,2    → Robot1 and Robot2
-ACTIVE_ROBOTS=1,2
+ACTIVE_ROBOTS=1
 
 # Headless mode:
 # 0 = Show launcher GUI/CLI before starting (recommended)
 # 1 = Read config and start immediately (for automated/training loops)
-HEADLESS=0
+HEADLESS=1
 
 # Debug mode (advanced):
 # 0 = Auto-launch Unity executable (recommended)
@@ -42,17 +42,17 @@ DEBUG_MODE=0
 # 1 = Save data for active robots
 # 0 = Do not save (faster, less disk usage)
 # Note: Set to 1 when using HEADLESS=1 (training loops require saved data)
-DATA_SAVE=1
+DATA_SAVE=0
 
 # Race participation flag:
 # 1 = Submit result to leaderboard
 # 0 = Test run only (no submission)
-RACE_FLAG=1
+RACE_FLAG=0
 
 # Post to X (Twitter) on race completion:
 # 1 = Post result to X
 # 0 = Do not post
-X_POST_FLAG=1
+X_POST_FLAG=0
 
 # ===== Robot Modes =====
 # Control mode per robot:
@@ -61,5 +61,5 @@ X_POST_FLAG=1
 # 3 = rule_based (autonomous lane following)
 # 4 = ai (neural network inference)
 # 5 = smartphone (controller via QR code)
-R1_MODE_NUM=4
+R1_MODE_NUM=1
 R2_MODE_NUM=4

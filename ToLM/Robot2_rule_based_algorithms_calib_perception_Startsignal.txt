@@ -1,3 +1,5 @@
+=== FILE: Robot2/rule_based_algorithms/calib_perception_Startsignal.py ===
+
 # calib_perception_Startsignal.py
 # =================================
 # Calibration / tuning script for start signal detection
@@ -91,13 +93,13 @@ def analyze_startsignal(
     """
     width, height = img.size
     top = int(height * 0.05)
-    bottom = int(height * 0.30)
+    bottom = int(height * 0.25)
 
-    # Three lamp regions
+    # Three lamp regions (Robot2: left side)
     lamp_positions = [
-        (int(width * 0.35), int(width * 0.50)),  # Lamp 1
-        (int(width * 0.55), int(width * 0.70)),  # Lamp 2
-        (int(width * 0.75), int(width * 0.90)),  # Lamp 3
+        (int(width * 0.18), int(width * 0.33)),  # Lamp 1: 18%-33%
+        (int(width * 0.33), int(width * 0.48)),  # Lamp 2: 33%-48% (shifted left)
+        (int(width * 0.48), int(width * 0.63)),  # Lamp 3: 48%-63% (shifted left)
     ]
 
     lamps = []
