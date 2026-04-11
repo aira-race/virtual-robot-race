@@ -1,47 +1,38 @@
 # ============================================================
-# aira - Configuration File (Beta 1.7)
+# aira - Configuration File
 # ============================================================
 
 # ===== Player =====
 
 # Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
-NAME=Player0000
+NAME=Guest
 
 # Competition name: must match a valid competition ID registered on the platform
 COMPETITION_NAME=Tutorial
 
 
-# ===== Network =====
-
-# Hostname or IP address where Unity is running
-HOST=localhost
-
-# WebSocket port number
-PORT=12346
-
-# ===== System =====
+# ===== Robot Setup =====
 
 # Active robots (comma-separated)
 # Example: ACTIVE_ROBOTS=1      → Robot1 only
 # Example: ACTIVE_ROBOTS=1,2    → Robot1 and Robot2
-ACTIVE_ROBOTS=1
+ACTIVE_ROBOTS=1,2
 
-# Headless mode:
-# 0 = Show launcher GUI/CLI before starting (recommended)
-# 1 = Read config and start immediately (for automated/training loops)
-HEADLESS=1
+# Control mode per robot:
+# 1 = keyboard
+# 2 = table (CSV playback)
+# 3 = rule_based (autonomous lane following)
+# 4 = ai (neural network inference)
+# 5 = smartphone (controller via QR code)
+R1_MODE_NUM=3
+R2_MODE_NUM=4
 
-# Debug mode (advanced):
-# 0 = Auto-launch Unity executable (recommended)
-# 1 = Manual Unity launch (for Unity Editor / debugging)
-DEBUG_MODE=0
 
 # ===== Data & Race =====
 
 # Save run data (images + CSV + video):
 # 1 = Save data for active robots
 # 0 = Do not save (faster, less disk usage)
-# Note: Set to 1 when using HEADLESS=1 (training loops require saved data)
 DATA_SAVE=0
 
 # Race participation flag:
@@ -54,12 +45,21 @@ RACE_FLAG=0
 # 0 = Do not post
 X_POST_FLAG=0
 
-# ===== Robot Modes =====
-# Control mode per robot:
-# 1 = keyboard
-# 2 = table (CSV playback)
-# 3 = rule_based (autonomous lane following)
-# 4 = ai (neural network inference)
-# 5 = smartphone (controller via QR code)
-R1_MODE_NUM=1
-R2_MODE_NUM=4
+
+# ===== Advanced =====
+
+# Hostname or IP address where Unity is running
+HOST=localhost
+
+# WebSocket port number
+PORT=12346
+
+# Headless mode:
+# 0 = Show launcher GUI/CLI before starting (recommended)
+# 1 = Read config and start immediately (for automated/training loops)
+HEADLESS=0
+
+# Debug mode:
+# 0 = Auto-launch Unity executable (recommended)
+# 1 = Manual Unity launch (for Unity Editor / debugging)
+DEBUG_MODE=0

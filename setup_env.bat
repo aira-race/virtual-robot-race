@@ -33,9 +33,11 @@ REM ===== Step 4: Show Python version =====
 echo.
 echo =============================================
 for /f "tokens=*" %%i in ('.venv\Scripts\python.exe --version') do echo %%i
-echo Virtual environment setup complete!
-echo To activate, run:
-echo   .venv\Scripts\activate
+echo Setup complete!
+echo.
+echo Next steps:
+echo   1. Open config.txt and set your NAME
+echo   2. Run: python main.py
 echo =============================================
 
 start cmd /k ".venv\Scripts\activate"
