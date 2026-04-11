@@ -307,18 +307,25 @@ def show_launcher() -> bool:
     _toggle(xpost_row, xpost_var, "ON", "OFF").pack(side="left")
 
     def _on_race_flag_change(*_):
-        is_submit = (race_var.get() == 1)
+        is_submit  = (race_var.get() == 1)
+        is_tutorial = (comp_var.get().strip() in ("", "Tutorial"))
+        needs_token = is_submit and not is_tutorial
+
         if is_submit:
             xpost_section.pack(fill="x", before=spacer_frame)
+        else:
+            xpost_section.pack_forget()
+
+        if needs_token:
             token_section.pack(fill="x", before=spacer_frame)
             _update_token_status()
             root.geometry(f"{W}x600+{x}+{y}")
         else:
-            xpost_section.pack_forget()
             token_section.pack_forget()
-            root.geometry(f"{W}x490+{x}+{y}")
+            root.geometry(f"{W}x{'540' if is_submit else '490'}+{x}+{y}")
 
     race_var.trace_add("write", _on_race_flag_change)
+    comp_var.trace_add("write", _on_race_flag_change)
 
     if race_var.get() == 1:
         root.after(0, _on_race_flag_change)
