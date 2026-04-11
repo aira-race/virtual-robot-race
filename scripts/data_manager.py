@@ -71,16 +71,6 @@ def get_last_run_dir_file(robot_id: str) -> Path:
     return get_interactive_dir(robot_id) / "last_run_dir.txt"
 
 
-# Legacy support: Default to Robot1 if no robot_id specified
-INTERACTIVE_DIR = BASE_DIR / "data_interactive"
-INTERACTIVE_DIR.mkdir(parents=True, exist_ok=True)
-
-SOC_FILE = INTERACTIVE_DIR / "latest_SOC.txt"
-RGB_FILE_A = INTERACTIVE_DIR / "latest_RGB_a.jpg"
-RGB_FILE_B = INTERACTIVE_DIR / "latest_RGB_b.jpg"
-RGB_NOW_FILE = INTERACTIVE_DIR / "latest_RGB_now.txt"
-LATEST_FRAME_NAME_FILE = INTERACTIVE_DIR / "latest_frame_name.txt"
-LAST_RUN_DIR_FILE = INTERACTIVE_DIR / "last_run_dir.txt"
 
 # Unity runtime log (source path may differ per build)
 UNITY_LOG_SRC = BASE_DIR / "Windows" / "runtime_Log.txt"
