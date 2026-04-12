@@ -9,7 +9,7 @@
 スムーズなレッスン開始のため、一つずつ確認しながら進めましょう。
 
 *   **そもそも「aira」とは？** -> [コンセプト紹介](https://www.youtube.com/watch?v=wAaaAODsfrE&t=26s)
-*   **動画で見る環境構築ガイド** -> [YouTube版インストールガイド](https://www.youtube.com/watch?v=cvUdITqjpc8)
+*   **動画で見る環境構築ガイド** -> [aira-race.com/getting-started](https://aira-race.com/getting-started)
 
 aira:autonomous intelligence racing arena
 
@@ -47,6 +47,7 @@ aira:autonomous intelligence racing arena
 | **Git** | 最新版 | [公式サイト](https://git-scm.com/) | デフォルト設定でOK |
 | **Googleアカウント** | - | [作成ページ](https://accounts.google.com/signup) | NotebookLM, Gemini Code Assistで利用 |
 | **GitHubアカウント**| - | [作成ページ](https://github.com/signup) | 開発環境のフォーク(Fork)で必須 |
+| **PayPalアカウント** | - (オプション) | [作成ページ](https://www.paypal.com/signup) | 賞金のある大会に参加する場合に必要 |
 
 > **⚠️ 最重要ポイント**
 > Pythonインストール時に「**Add Python to PATH**」にチェックを入れ忘れると、`python` コマンドが認識されず、この後の手順がすべて失敗します。もし忘れてしまった場合は、一度アンインストールして再インストールしてください。
@@ -57,100 +58,33 @@ aira:autonomous intelligence racing arena
 ここからが実際の手順です。自分のPC上に、自分専用の開発環境を構築していきます。
 
 ### Step 1: 自分用のリポジトリを準備 (Fork & Clone)
-まず、公式リポジトリの自分用のコピー（フォーク）を作り、それを自分のPCにダウンロード（クローン）します。
 
-1.  **フォーク (Fork)**
-    - Webブラウザで [公式リポジトリ](https://github.com/aira-race/virtual-robot-race) を開きます。
-    - 画面右上にある **Fork** ボタンを押して、自分のGitHubアカウントにリポジトリのコピーを作成します。
-    - これで、`https://github.com/あなたのユーザー名/virtual-robot-race` という、あなた専用のリポジトリができました。
+「Fork（フォーク）」とは、公式リポジトリの自分専用のコピーをGitHub上に作ることです。
+「Clone（クローン）」とは、そのコピーを自分のPCにダウンロードすることです。
 
-2.  **クローン (Clone)**
-    - 次に、**あなたのPC**にソースコードをダウンロードします。
-    - 任意の作業フォルダでターミナルを開き、以下のコマンドを実行します。`あなたのユーザー名` の部分は、ご自身のGitHubユーザー名に置き換えてください。
-    ```bash
-    git clone https://github.com/あなたのユーザー名/virtual-robot-race.git
-    ```
-    - これで、PC上に `virtual-robot-race` というフォルダが作成されます。
+この2つの作業を、**GitHub Desktop**（無料アプリ）を使って行います。ターミナルのコマンドを入力する必要はありません。
 
-### Step 2: 本家リポジトリとの連携設定 (Upstream)
-今後、本家リポジトリがアップデートされた際に、その変更を簡単に取り込めるように「Upstream（上流）」という名前で本家を登録しておきます。
+1. **GitHub Desktop をインストールする**
+    - まだインストールしていない場合は、先にインストールしてください。
+    - → [GitHub Desktop をダウンロード](https://desktop.github.com/)
+    - インストール後、GitHub アカウントでサインインします。
 
-1.  ターミナルで、先ほど作成されたプロジェクトフォルダに移動します。
-    ```bash
-    cd virtual-robot-race
-    ```
-2.  以下のコマンドを実行して、本家リポジトリを `upstream` として登録します。
-    ```bash
-    git remote add upstream https://github.com/aira-race/virtual-robot-race.git
-    ```
-3.  設定が正しくできたか確認しましょう。
-    ```bash
-    git remote -v
-    ```
-    以下のように `origin` (あなた自身のフォーク)と `upstream` (本家)の2種類が表示されれば成功です。
-    ```
-    origin    https://github.com/あなたのユーザー名/virtual-robot-race.git (fetch)
-    origin    https://github.com/あなたのユーザー名/virtual-robot-race.git (push)
-    upstream  https://github.com/aira-race/virtual-robot-race.git (fetch)
-    upstream  https://github.com/aira-race/virtual-robot-race.git (push)
-    ```
+2. **公式リポジトリをフォークする**
+    - ブラウザで [公式リポジトリ](https://github.com/aira-race/virtual-robot-race) を開きます。
+    - 画面右上の **Fork** ボタンをクリックします。
+    - 「Create fork」ボタンを押せば完了です。
+    - これで `https://github.com/あなたのユーザー名/virtual-robot-race` という、あなた専用のリポジトリができました。
 
-#### 本家の更新を自分のフォークに取り込む方法
+3. **GitHub Desktop でクローンする**
+    - フォーク完了後、緑色の **Code** ボタンをクリックします。
+    - **「Open with GitHub Desktop」** を選択します。
+    - GitHub Desktop が開いたら、保存場所を確認して **Clone** ボタンを押します。
+    - PC上に `virtual-robot-race` フォルダが作成されれば完了です。
 
-本家リポジトリが更新された場合は、以下の手順で自分のフォーク（origin）に反映できます。
-
-```bash
-# 1. 本家（upstream）の最新情報を取得する
-git fetch upstream
-
-# 2. 本家の main ブランチの内容を、自分のローカルに取り込む
-git merge upstream/main
-
-# 3. 自分のフォーク（origin）にも反映する
-git push origin main
-```
-
-> **ポイント**: `git fetch` は「情報を取ってくるだけ」で、手元のファイルはまだ変わりません。`git merge` で初めてファイルに変更が反映されます。
-
-#### 「自分のアルゴリズムを守りながら」本家の更新を取り込む方法
-
-> **こんな不安はありませんか？**
-> 「本家が更新されたのは分かった。でも、自分が書いたアルゴリズムを上書きしてしまわないか心配…」
-
-大丈夫です。**自分の作業を別のブランチに「退避」してから同期する**という順番を守れば、消えるものは何もありません。
-
-**流れのイメージ:**
-```
-main  ──[本家と同期]──────────────────→ 最新の本家と同じ状態
-                \                    /
-dev    ──[あなたのアルゴリズムを退避]──[差分を見ながら統合]
-```
-
-**手順:**
-```bash
-# --- Step A: まず、今の自分の作業を "dev" ブランチに退避する ---
-git switch -c dev          # "dev" という名前のブランチを作って移動
-git add .
-git commit -m "自分のアルゴリズムを退避"
-git push origin dev        # GitHubにもバックアップ（これで消える心配はゼロ）
-
-# --- Step B: main ブランチを本家と同期する ---
-git switch main            # main ブランチに戻る
-git fetch upstream         # 本家の最新情報を取ってくる
-git merge upstream/main    # main を本家と同じ状態にする
-git push origin main       # 自分のフォークにも反映
-
-# --- Step C: dev に戻って、本家の変更を取り込みながら統合する ---
-git switch dev             # 自分のアルゴリズムがある dev に戻る
-git merge main             # main（本家の変更）を dev に取り込む
-```
-
-`git merge main` を実行すると、**VSCodeが自動で差分エディタを開きます。**
-「自分のコード」と「本家の変更」が並んで表示されるので、残す方を選ぶだけです。
-
-> **「もし失敗したら？」と思ったら:**
-> `dev` ブランチとGitHubへのバックアップがある限り、何をしても元に戻せます。
-> 怖がらずに試してみてください。
+> **💡 ターミナルでやりたい場合**: 以下のコマンドでも同じことができます。
+> ```bash
+> git clone https://github.com/あなたのユーザー名/virtual-robot-race.git
+> ```
 
 ### Step 3: Python環境の構築
 次に、ロボットを制御するPythonプログラムの開発環境を構築します。
