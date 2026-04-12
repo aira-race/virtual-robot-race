@@ -346,20 +346,21 @@ def show_launcher() -> bool:
                 parent=root,
             )
             return
-        # Check: keyboard mode not allowed in competition mode
+        # Check: keyboard / smartphone not allowed in competition mode
         comp = comp_var.get().strip()
         is_comp = (race_var.get() == 1 and comp not in ("", "Tutorial"))
         active = active_var.get()
-        keyboard_robots = [
+        manual_modes = {"keyboard", "smartphone"}
+        manual_robots = [
             r for r, v in [("R1", r1_var.get()), ("R2", r2_var.get())]
-            if v == "keyboard" and r[1] in active.replace(",", "")
+            if v in manual_modes and r[1] in active.replace(",", "")
         ]
-        if is_comp and keyboard_robots:
+        if is_comp and manual_robots:
             messagebox.showerror(
                 "Invalid Configuration",
-                f"{', '.join(keyboard_robots)} is set to Keyboard mode,\n"
+                f"{', '.join(manual_robots)} is set to Keyboard or Smartphone mode,\n"
                 f"but COMPETITION_NAME='{comp}' (competition mode).\n\n"
-                "Keyboard mode cannot participate in competitions.\n"
+                "Keyboard and Smartphone modes cannot participate in competitions.\n"
                 "Change the mode, or set Race Flag to OFF.",
                 parent=root,
             )
