@@ -15,7 +15,7 @@ aira トレーニングカリキュラムへようこそ。
 - 一部ツール（Google Gemini Code Assist等）の利用に Google アカウントが必要（18歳以上推奨）
 
 **動作環境**
-- **Windows 10 以降**（Mac/Linux 対応は今後予定）
+- **Windows 11**（Mac/Linux 対応は今後予定）
 - Python 3.12 以降 — [ダウンロードはこちら](https://www.python.org/downloads/)
 - VSCode — [ダウンロードはこちら](https://code.visualstudio.com/)
 - Git — [ダウンロードはこちら](https://git-scm.com/)
@@ -68,8 +68,8 @@ aira トレーニングカリキュラムへようこそ。
 1. [aira-race.com](https://aira-race.com) で **アカウント登録** — 表示名を設定（これが `config.txt` の `NAME=` になります）
 2. [aira-race.com/competitions](https://aira-race.com/competitions) で **コンペに参加** — Competition ID を確認
 3. `config.txt` の **`COMPETITION_NAME`** にコンペIDを設定
-4. **`RACE_FLAG=1`** にして `python main.py` を実行
-5. 確認パネルで **POST をクリック** — リーダーボードに結果が反映されます
+4. **`RACE_FLAG=1`** にして `start.bat` を実行（または `python main.py`）
+5. レース終了後、結果が自動でリーダーボードに反映されます
 
 ---
 

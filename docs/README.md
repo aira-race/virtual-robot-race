@@ -9,10 +9,10 @@ Learn to build, train, and race your AI algorithm — then submit to the global 
 
 Choose your language to get started:
 
-| Language | Link | Status |
-|----------|------|--------|
-| 🇬🇧 English | [**lessons_EN →**](lessons_EN/README.md) | Complete |
-| 🇯🇵 日本語 | [**lessons_JP →**](lessons_JP/README.md) | 完備 |
+| Language | Link |
+|----------|------|
+| 🇯🇵 日本語 | [**lessons_JP →**](lessons_JP/README.md) |
+| 🇬🇧 English | [**lessons_EN →**](lessons_EN/README.md) |
 
 Each lessons folder contains a `README.md` with the full curriculum overview, prerequisites, and lesson index.
 
@@ -38,6 +38,15 @@ The lessons were originally written in Japanese and translated into English.
 | *Your language* | `lessons_XX/` | *You could be next!* |
 
 → See [CONTRIBUTING_TRANSLATIONS.md](CONTRIBUTING_TRANSLATIONS.md) for the full guide and PR instructions.
+
+---
+
+---
+
+## Feedback & Corrections
+
+Found something wrong or have a suggestion? We'd love to hear from you!
+→ **[Open a GitHub Issue](https://github.com/aira-race/virtual-robot-race/issues)**
 
 ---
 
