@@ -62,8 +62,8 @@ Robot1/
 │   ├── Linetrace_white.py          白線トレースの実装例
 │   └── debug_utils.py              デバッグ画像の生成
 └── data_interactive/         ← リアルタイムデータ置き場（自動生成、変更不要）
-    ├── latest_RGB_a/         ← 最新の画像ファイル（50msごとに更新）
-    ├── latest_RGB_b/
+    ├── latest_RGB_a.jpg      ← 最新の画像ファイル（50msごとに更新）
+    ├── latest_RGB_b.jpg
     └── latest_SOC.txt        ← 最新のSOC値
 ```
 
@@ -121,13 +121,14 @@ def get_latest_command():
 
 ## 3. まずはサンプルで走らせてみよう
 
-`config.txt` の `R1_MODE_NUM` を `3` に変更します。
+`start.bat` を実行してランチャーを開き、以下のように設定します。
 
-```ini
-R1_MODE_NUM=3
-```
+| 項目 | 設定値 |
+|------|--------|
+| **Active** | `1` |
+| **R1 mode** | `rule_based` |
 
-`main.py` を起動してロボットを走らせてみましょう。
+設定を確認したら **START** をクリックしてロボットを走らせてみましょう。
 
 > **観察ポイント:**
 > - ロボットはコースを自律走行しましたか？
@@ -186,7 +187,7 @@ R1_MODE_NUM=3
 
 1. **方針決定**: AIアシスタントと相談して改善方針を決める
 2. **実装**: `rule_based_algorithms/` 内のファイルをAIアシスタントと一緒に書き換える
-3. **テスト走行**: `main.py` を起動して実際に走らせる
+3. **テスト走行**: `start.bat` を起動して実際に走らせる
 4. **分析**: ターミナルログ・デバッグ画像・`metadata.csv` で結果を確認
 5. **反復**: 改善してまた走らせる
 
@@ -225,7 +226,7 @@ git push
 
 ### 課題1: サンプルを走らせてパラメーターを1つ変えてみる
 
-1. `MODE_NUM=3` で走らせ、タイムを記録する。
+1. ランチャーで **R1 mode=`rule_based`** に設定して走らせ、タイムを記録する。
 2. `driver_model.py` の `v_max` を `0.70` に変更して走らせてみる。
 3. 何が変わりましたか？良くなりましたか？悪くなりましたか？
 
@@ -244,3 +245,12 @@ git push
 - [04_Log_and_Table_Mode.md](04_Log_and_Table_Mode.md)
 - [06_AI_Mode.md](06_AI_Mode.md)
 - [用語集](99_Glossary.md)
+
+---
+
+> **❓ うまくいかない場合は？**
+> [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) にエラーメッセージをそのまま貼り付けて質問してください。
+
+---
+
+⬅️ [前のレッスン: 04_Log_and_Table_Mode.md（ログ・テーブルモード）](04_Log_and_Table_Mode.md) ｜ ➡️ [次のレッスン: 06_AI_Mode.md（AIモード）](06_AI_Mode.md)
