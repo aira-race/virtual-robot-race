@@ -13,39 +13,20 @@
 レッスンで開発した、あなたのルールベースアルゴリズムまたはAIモデルを完成させてください。
 
 ### Step 2: レース参加設定
-リポジトリルートの `config.txt` を開き、以下の項目を設定します。
+`start.bat` を実行してランチャーを開き、以下のように設定します。
 
-#### プレイヤー名
-`NAME` に、ランキングに表示されるあなたのプレイヤー名を設定します。使用できる文字は半角英数字とアンダースコア（`_`）のみ、最大16文字です。
+| 項目 | 設定値 | 説明 |
+|------|--------|------|
+| **Name** | あなたの名前 | 英数字とアンダースコア、最大16文字。ランキングに表示されます。 |
+| **Competition** | コンペティションID | 主催者から案内されたIDを入力。練習の場合は `Tutorial`。 |
+| **Active** | `1` | タイムアタックはRobot1のみ |
+| **R1 mode** | `rule_based` または `ai` | あなたのアルゴリズム |
+| **Race flag** | `SUBMIT` | リーダーボードに結果を送信する |
 
-```ini
-# Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
-NAME=aira_Racer_0001
-```
-
-#### コンペティション名
-`COMPETITION_NAME` に、参加するコンペティションのIDを設定します。練習走行の場合は `Tutorial` のままにしてください。
-
-```ini
-# Competition name: must match a valid competition ID registered on the platform
-COMPETITION_NAME=Tutorial
-```
-
-> **注意（コンペティション参加時）**: `COMPETITION_NAME` に正式なレースIDを設定する場合、あなたの `NAME` が事前にコンペティションシートに登録されている必要があります。未登録の場合、レース開始前に認証エラーが表示されます。
-
-#### レース参加フラグ
-`RACE_FLAG` を `1` に変更します。これを `1` にすると、走行結果が公式リーダーボードに登録されます。
-
-```ini
-# Race participation flag:
-# 1 = Submit result to leaderboard
-# 0 = Test run only (no submission)
-RACE_FLAG=1
-```
+> **注意（コンペティション参加時）**: 正式なコンペティションIDを入力する場合、あなたの `Name` が事前にコンペティションシートに登録されている必要があります。未登録の場合、レース開始前に認証エラーが表示されます。
 
 ### Step 3: 走行
-`main.py` を実行して、タイムアタックを開始します。
-完走すると **POST確認パネル** が表示されます。内容を確認して **POST** ボタンをクリックすると、最速タイムがリーダーボードに登録されます。
+**START** をクリックするとレースが始まります。完走すると走行結果が**自動でリーダーボードに送信**されます。
 
 **リーダーボード:** [https://aira-race.com/](https://aira-race.com/)
 
@@ -72,3 +53,12 @@ RACE_FLAG=1
 
 さぁ、あなたのアルゴリズムでレースに挑みましょう！
 **Race your algorithm!**
+
+---
+
+> **❓ うまくいかない場合は？**
+> [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) にエラーメッセージをそのまま貼り付けて質問してください。
+
+---
+
+⬅️ [前のレッスン: 06_AI_Mode.md（AIモード）](06_AI_Mode.md) ｜ ➡️ [用語集: 99_Glossary.md](99_Glossary.md)
