@@ -13,39 +13,20 @@ First, try the Time Attack where you drive solo and aim for the fastest time ove
 Complete the rule-based algorithm or AI model you developed during training.
 
 ### Step 2: Configure Race Settings
-Open `config.txt` in the repository root and set the following items.
+Run `start.bat` to open the launcher and set the following:
 
-#### Player Name
-Set `NAME` to your player name that will appear on the leaderboard. Allowed characters: A-Z, a-z, 0-9, and underscore (`_`), up to 16 characters.
+| Setting | Value | Description |
+|---------|-------|-------------|
+| **Name** | Your name | Alphanumeric and underscore, up to 16 characters. Shown on the leaderboard. |
+| **Competition** | Competition ID | Enter the ID provided by the organizer. Use `Tutorial` for practice. |
+| **Active** | `1` | Time Attack uses Robot1 only |
+| **R1 mode** | `rule_based` or `ai` | Your algorithm |
+| **Race flag** | `SUBMIT` | Submit result to the leaderboard |
 
-```ini
-# Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
-NAME=aira_Racer_0001
-```
-
-#### Competition Name
-Set `COMPETITION_NAME` to the competition ID you are joining. For practice, leave it as `Tutorial`.
-
-```ini
-# Competition name: must match a valid competition ID registered on the platform
-COMPETITION_NAME=Tutorial
-```
-
-> **Note (for competition mode)**: When setting a real competition ID, your `NAME` must be pre-registered in the competition sheet. If not registered, an authentication error will appear before the race starts.
-
-#### Race Participation Flag
-Change `RACE_FLAG` to `1`. Setting this to `1` submits your result to the official leaderboard.
-
-```ini
-# Race participation flag:
-# 1 = Submit result to leaderboard
-# 0 = Test run only (no submission)
-RACE_FLAG=1
-```
+> **Note (for competition mode)**: When entering a real competition ID, your `Name` must be pre-registered in the competition sheet. If not registered, an authentication error will appear before the race starts.
 
 ### Step 3: Drive
-Run `main.py` to start the Time Attack.
-When you finish, a **Post Confirmation Panel** appears. Review your result and click **POST** to submit the fastest time to the leaderboard.
+Click **START** to begin the Time Attack. When you finish, your result is **automatically submitted to the leaderboard**.
 
 **Leaderboard:** [https://aira-race.com/](https://aira-race.com/)
 
@@ -72,3 +53,12 @@ Compress your entire `Robot1` folder as a ZIP file and submit it to the designat
 
 Now, race with your algorithm!
 **Race your algorithm!**
+
+---
+
+> **❓ Having trouble?**
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+
+---
+
+⬅️ [Previous lesson: 06_AI_Mode.md (AI Mode)](06_AI_Mode.md) ｜ ➡️ [Glossary: 99_Glossary.md](99_Glossary.md)

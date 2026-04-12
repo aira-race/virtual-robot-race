@@ -5,7 +5,7 @@ In this lesson, you will review the driving log (Log) saved during the previous 
 **Learning goals:**
 - Understand the folder structure and contents of log data saved with `DATA_SAVE=1`
 - Learn the meaning of the detailed driving data in `metadata.csv`
-- Learn how to drive the robot using Table Mode (`MODE_NUM=2`) based on a CSV file
+- Learn how to drive the robot using Table Mode based on a CSV file
 - Learn the basics of editing log data to create custom driving patterns
 
 ---
@@ -94,7 +94,7 @@ This file lets you analyze in detail "at what moment, with what input, where was
 
 ## 2. Reproducing a Run in Table Mode
 
-Table Mode (`MODE_NUM=2`) reads `drive_torque` and `steer_angle` values from top to bottom in `Robot1/table_input.csv` and drives the robot accordingly.
+Table Mode reads `drive_torque` and `steer_angle` values from top to bottom in `Robot1/table_input.csv` and drives the robot accordingly.
 In other words, **the robot automatically drives according to a "blueprint" (table) you provide.**
 
 ### Format of `table_input.csv`
@@ -110,11 +110,15 @@ This file is very simple — it has only 3 columns:
 ### Task 1: Reproduce a Run from Log Data
 
 1.  **Prerequisites**
-    - Set the following in `config.txt`:
-      ```ini
-      ACTIVE_ROBOTS=1
-      R1_MODE_NUM=2
-      ```
+    - Run `start.bat` to open the launcher and set the following:
+
+    | Setting | Value |
+    |---------|-------|
+    | **Active** | `1` |
+    | **R1 mode** | `table` |
+    | **Data save** | `OFF` |
+
+    Click **START**.
 
 2.  **Create table data**
     - Open the log folder created during the previous practice session, and open `metadata.csv` in a spreadsheet application.
@@ -128,7 +132,7 @@ This file is very simple — it has only 3 columns:
     - Save the file in CSV format.
 
 4.  **Check the run**
-    - Run `main.py`.
+    - Run `start.bat`.
     - Confirm that the robot starts driving automatically according to the log you copied. Seeing your own keyboard inputs replayed may feel a little uncanny.
 
 > **Think about it: Did it reproduce exactly?**
@@ -197,3 +201,12 @@ Plot a line chart with `race_time_ms` on the horizontal axis and three lines: `p
 - [03_Manual_Control.md](03_Manual_Control.md)
 - [05_Rule_Based_Control.md](05_Rule_Based_Control.md)
 - [Glossary](99_Glossary.md)
+
+---
+
+> **❓ Having trouble?**
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+
+---
+
+⬅️ [Previous lesson: 03_Manual_Control.md (Manual Control)](03_Manual_Control.md) ｜ ➡️ [Next lesson: 05_Rule_Based_Control.md (Rule-Based Control)](05_Rule_Based_Control.md)

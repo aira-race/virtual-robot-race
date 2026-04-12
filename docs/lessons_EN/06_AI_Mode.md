@@ -14,23 +14,23 @@ Make active use of an AI assistant (such as Gemini Code Assist) here as well.
 
 ## 1. First, Run the Robot in AI Mode
 
-Change `R1_MODE_NUM` in `config.txt` to `4`.
+Run `start.bat` to open the launcher and set the following:
 
-```ini
-R1_MODE_NUM=4
-```
+| Setting | Value |
+|---------|-------|
+| **Active** | `1` |
+| **R1 mode** | `ai` |
+
+Click **START**.
 
 ### 1.1 Prepare the Sample Model
 
 AI mode requires a trained model file (`model.pth`).
-Check the `Robot1/models/` folder.
-
-- File exists → proceed to the next step
-- File does not exist → download the distributed sample model and save it as `Robot1/models/model.pth`.
+The sample model is included in the repository — confirm that `Robot1/models/model.pth` exists.
 
 ### 1.2 Run It
 
-Launch `main.py`. The following log will appear in the terminal:
+Run `start.bat`. The following log will appear in the terminal:
 
 ```
 [R1 Inference] Using device: cpu   (or cuda)
@@ -163,12 +163,13 @@ Robot1/
 
 **Step 1: Collect data**
 
-Set `config.txt` to the following and drive in keyboard mode.
+Run `start.bat` to open the launcher and set the following, then drive in keyboard mode.
 
-```ini
-R1_MODE_NUM=1
-DATA_SAVE=1
-```
+| Setting | Value |
+|---------|-------|
+| **Active** | `1` |
+| **R1 mode** | `keyboard` |
+| **Data save** | `ON` |
 
 After driving, a `Robot1/training_data/run_[datetime]/` folder is created.
 At least 3 runs worth of data tend to produce better training results.
@@ -204,9 +205,7 @@ cp experiments/iteration_[timestamp]/model_best.pth models/model.pth
 
 **Step 4: Run in AI mode**
 
-```ini
-MODE_NUM=4
-```
+Set **R1 mode=`ai`** in the launcher and click **START**.
 
 ---
 
@@ -379,9 +378,9 @@ do you have ideas for more effective scoring?
 
 ### Task 1: Build Your Own AI Model from Keyboard Data (Local)
 
-1. Drive with keyboard (`MODE_NUM=1` / `DATA_SAVE=1`) for 3 runs
+1. Set **R1 mode=`keyboard`, Data save=`ON`** in the launcher and drive for 3 runs
 2. Run local training with `ai_training/train.py`
-3. Place the generated `model.pth` in `models/` and confirm it runs in AI mode (`MODE_NUM=4`)
+3. Place the generated `model.pth` in `models/` and set **R1 mode=`ai`** in the launcher to confirm it runs
 4. Record how long training took (**Training Cost ①**)
 
 ### Task 2: Train the Same Data on Colab
@@ -414,3 +413,12 @@ I'd like to discuss from these angles:
 - [05_Rule_Based_Control.md](05_Rule_Based_Control.md)
 - [04_Log_and_Table_Mode.md](04_Log_and_Table_Mode.md)
 - [Glossary](99_Glossary.md)
+
+---
+
+> **❓ Having trouble?**
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+
+---
+
+⬅️ [Previous lesson: 05_Rule_Based_Control.md (Rule-Based Control)](05_Rule_Based_Control.md) ｜ ➡️ [Next lesson: 07_How_to_Join_Race.md (How to Join a Race)](07_How_to_Join_Race.md)

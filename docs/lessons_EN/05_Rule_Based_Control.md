@@ -62,8 +62,8 @@ Robot1/
 │   ├── Linetrace_white.py          White line tracing implementation example
 │   └── debug_utils.py              Debug image generation
 └── data_interactive/         ← Real-time data directory (auto-generated, do not modify)
-    ├── latest_RGB_a/         ← Latest image file (updated every 50 ms)
-    ├── latest_RGB_b/
+    ├── latest_RGB_a.jpg      ← Latest image file (updated every 50 ms)
+    ├── latest_RGB_b.jpg
     └── latest_SOC.txt        ← Latest SOC value
 ```
 
@@ -121,13 +121,14 @@ def get_latest_command():
 
 ## 3. Run the Sample First
 
-Change `R1_MODE_NUM` in `config.txt` to `3`.
+Run `start.bat` to open the launcher and set the following:
 
-```ini
-R1_MODE_NUM=3
-```
+| Setting | Value |
+|---------|-------|
+| **Active** | `1` |
+| **R1 mode** | `rule_based` |
 
-Launch `main.py` and run the robot.
+Click **START** to run the robot.
 
 > **Observation points:**
 > - Did the robot drive the course autonomously?
@@ -182,7 +183,7 @@ Example points to consider:
 
 1. **Define policy**: Decide on an improvement policy through discussion with the AI assistant
 2. **Implement**: Rewrite files in `rule_based_algorithms/` together with the AI assistant
-3. **Test run**: Launch `main.py` and actually drive the robot
+3. **Test run**: Launch `start.bat` and actually drive the robot
 4. **Analyze**: Check results using terminal logs, debug images, and `metadata.csv`
 5. **Iterate**: Improve and race again
 
@@ -221,7 +222,7 @@ git push
 
 ### Task 1: Run the Sample and Change One Parameter
 
-1. Run with `MODE_NUM=3` and record your time.
+1. Set **R1 mode=`rule_based`** in the launcher and run, then record your time.
 2. Change `v_max` in `driver_model.py` to `0.70` and run again.
 3. What changed? Did it improve or worsen?
 
@@ -236,7 +237,17 @@ Create an algorithm that achieves the fastest time while respecting all constrai
 There is no single correct answer — experiment freely.
 
 ---
+
 ### Related Resources
 - [04_Log_and_Table_Mode.md](04_Log_and_Table_Mode.md)
 - [06_AI_Mode.md](06_AI_Mode.md)
 - [Glossary](99_Glossary.md)
+
+---
+
+> **❓ Having trouble?**
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+
+---
+
+⬅️ [Previous lesson: 04_Log_and_Table_Mode.md (Log & Table Mode)](04_Log_and_Table_Mode.md) ｜ ➡️ [Next lesson: 06_AI_Mode.md (AI Mode)](06_AI_Mode.md)

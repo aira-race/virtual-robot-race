@@ -9,7 +9,7 @@ This tool acts as an "AI mentor" that fully understands aira's specifications an
 ## 2.1 How to Access the Live Q&A
 Use the link below to open the dedicated chat window for this training.
 
-[Ask a question on NotebookLM](https://notebooklm.google.com/notebook/1a8a70f1-d30e-4bad-bd01-67b3219cfafa)
+[Ask a question on NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713)
 
 Login: Sign in with your own Google account.
 
@@ -43,3 +43,7 @@ Good example: "I ran `main.py`, but the Unity screen stays black. The terminal s
 ## 2.4 Integrating It into Your Workflow
 During lessons, keep NotebookLM open in a browser tab while you write code in VS Code.
 It lets you instantly resolve those "I don't want to interrupt the instructor, but I just need a quick check" moments — dramatically improving your learning efficiency.
+
+---
+
+⬅️ [Previous lesson: 01_Foundation.md (Foundation)](01_Foundation.md) ｜ ➡️ [Next lesson: 03_Manual_Control.md (Manual Control)](03_Manual_Control.md)

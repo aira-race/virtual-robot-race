@@ -8,13 +8,13 @@ This document summarizes the technical terms and important keywords used in the 
 
 *   **ACTIVE_ROBOTS**: A setting in `config.txt`. Specifies the number of robots participating in the race (1 or 2).
 *   **AI Assistant**: An AI such as Gemini Code Assist that helps with coding. Active use of an AI assistant is recommended throughout this training.
-*   **AI Mode**: A mode in which the robot drives autonomously based on inference results from a neural network model. (`MODE_NUM=4`)
+*   **AI Mode**: A mode in which the robot drives autonomously based on inference results from a neural network model. Select **R mode=`ai`** in the launcher.
 *   **aira**: Short for "autonomous intelligence racing arena." The name of this virtual robot racing platform.
 *   **CNN (Convolutional Neural Network)**: A type of neural network commonly used to extract features from image data.
 *   **config.txt**: The project-wide configuration file. Primarily used to specify the number of robots to run (`ACTIVE_ROBOTS`).
 *   **CUDA**: A platform for parallel computing on NVIDIA GPUs. Used to accelerate AI training and inference.
 *   **DAgger (Dataset Aggregation)**: A variant of imitation learning. Continuously adds the AI's own driving data to the training dataset to improve the ability to handle unknown situations.
-*   **DATA_SAVE**: A setting in `robot_config.txt`. When set to `1`, driving data (images, `metadata.csv`, etc.) is saved. When set to `0`, nothing is saved.
+*   **DATA_SAVE**: A setting in `config.txt`. When set to `1`, driving data (images, `metadata.csv`, etc.) is saved. When set to `0`, nothing is saved.
 *   **drive_torque**: A variable that specifies the torque (rotational force) applied to the drive wheels. Ranges from -1.0 (maximum reverse) to +1.0 (maximum forward). One of the two fundamental control outputs.
 *   **E2E (End-to-End)**: Meaning "from end to end." In AI mode, a method where a single neural network processes everything from image input to control output.
 *   **Early stopping**: A technique in AI training that halts training early when performance on validation data stops improving, helping to prevent overfitting.
@@ -25,14 +25,13 @@ This document summarizes the technical terms and important keywords used in the 
 *   **loss**: In AI training, a metric that represents the discrepancy (error) between the model's predictions and the ground-truth data. Training aims to minimize this loss.
 *   **metadata.csv**: The most important data file at the center of a driving log. Every state of the robot (inputs, position, SOC, etc.) is recorded tick by tick.
 *   **MIMO (Multiple Input, Multiple Output)**: A control system that determines multiple outputs from multiple inputs. In this project, the inputs are "image and SOC" and the outputs are "throttle and steering."
-*   **MODE_NUM**: A setting in `robot_config.txt`. Specifies the robot's control mode. `1`: keyboard, `2`: table, `3`: rule-based, `4`: AI, `5`: smartphone.
-*   **NAME**: A setting in `robot_config.txt`. The player name displayed on the leaderboard.
+*   **MODE_NUM**: A setting in `config.txt`. Specifies the robot's control mode. `1`: keyboard, `2`: table, `3`: rule-based, `4`: AI, `5`: smartphone. Selectable via the **R1 mode / R2 mode** dropdown in the launcher.
+*   **NAME**: A setting in `config.txt`. The player name displayed on the leaderboard.
 *   **PyTorch**: An open-source machine learning library. Used primarily for AI model training and inference.
-*   **RACE_FLAG**: A setting in `robot_config.txt`. When set to `1`, the run result is registered on the leaderboard.
-*   **robot_config.txt**: The individual configuration file for each robot (Robot1, Robot2). Specifies the control mode (`MODE_NUM`), player name (`NAME`), and more.
+*   **RACE_FLAG**: A setting in `config.txt`. When set to `1`, the run result is registered on the leaderboard. When `0`, it is a test run only.
 *   **SOC (State of Charge)**: Battery charge level. `1.0` = fully charged, `0.0` = empty.
 *   **steer_angle**: A variable that specifies the steering angle of the front wheels. Unit is radians. One of the two fundamental control outputs.
-*   **table_input.csv**: The CSV file used in Table Mode (`MODE_NUM=2`). Contains `drive_torque` and `steer_angle` per `time_id`; the robot drives exactly according to this file.
+*   **table_input.csv**: The CSV file used in Table Mode. Contains `drive_torque` and `steer_angle` per `time_id`; the robot drives exactly according to this file.
 *   **tick**: The smallest unit of time in the simulation. In this project, one tick advances every 20 fps (50 ms).
 *   **Unity**: A cross-platform game engine for creating 3D and 2D video games and interactive content. Used as the simulator in this project.
 *   **Upstream**: In Git, the name of the remote pointing to the original (official) repository you forked from. Used to pull in updates from the original.
@@ -66,7 +65,7 @@ This document summarizes the technical terms and important keywords used in the 
 *   **Radian**: A unit of angle. Used for `steer_angle`. (π radians = 180 degrees)
 *   **Reinforcement Learning**: A learning method where a robot learns through trial and error to take actions that yield better results (rewards). (**Note**: `rl_reward.py` in this project applies this concept for evaluating (scoring) driving quality from post-race data, not for real-time learning.)
 *   **Robust**: The property of maintaining stable performance even when subjected to unexpected external influences (disturbances) or changes in environment. Also referred to as robustness.
-*   **Rule-Based Control**: A method of controlling the robot based on rules defined by a human, such as "if the white line is to the right, turn the wheel left." (`MODE_NUM=3`)
+*   **Rule-Based Control**: A method of controlling the robot based on rules defined by a human, such as "if the white line is to the right, turn the wheel left." Select **R mode=`rule_based`** in the launcher.
 *   **Running**: A status value indicating the robot is currently driving.
 *   **Sequential Control**: A control method that advances each stage of control in a predefined order. Table Mode is an example of this.
 *   **Sliding Window Method**: An image processing technique. A small window is slid across the image to analyze information in each sub-region. Used for white line detection.
@@ -76,3 +75,7 @@ This document summarizes the technical terms and important keywords used in the 
 *   **Torque**: The force that rotates the tires. Controlled via `drive_torque`.
 *   **Vibe Coding**: See A–Z section above.
 *   **Wrong-way driving**: Driving the course in the opposite direction. Results in a lap count penalty.
+
+---
+
+⬅️ [Previous lesson: 07_How_to_Join_Race.md (How to Join a Race)](07_How_to_Join_Race.md) ｜ [Back to lesson list](README.md)

@@ -58,3 +58,7 @@ In the upcoming training sessions, you will go through this cycle repeatedly whi
     The robot running your algorithm makes a strange move during a race (e.g., suddenly spins, runs out of energy before the goal) and finishes last. Whose responsibility is this "unexpected result"? And how would you use the "Decision-Making Cycle" to find the cause and apply it to the next race?
 
 In the next section, you will learn how to use "NotebookLM," the AI chat that will powerfully support your learning.
+
+---
+
+⬅️ [Previous lesson: 00_Preparation.md (Preparation)](00_Preparation.md) ｜ ➡️ [Next lesson: 02_Live_QA_NotebookLM.md (Live Q&A)](02_Live_QA_NotebookLM.md)
