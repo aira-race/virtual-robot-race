@@ -95,7 +95,7 @@
 
 ## 2. テーブルモードでの走行再現
 
-テーブルモード（`MODE_NUM=2`）は、`Robot1/table_input.csv`というファイルに記述された`drive_torque`と`steer_angle`の値を上から順番に読み込み、その通りにロボットを動かすモードです。
+テーブルモードは、`Robot1/table_input.csv`というファイルに記述された`drive_torque`と`steer_angle`の値を上から順番に読み込み、その通りにロボットを動かすモードです。
 つまり、**走行の設計図（テーブル）に基づいて、ロボットが自動で走ります。**
 
 ### `table_input.csv`の形式
@@ -111,11 +111,15 @@
 ### 課題1: ログデータから走行を再現する
 
 1.  **事前準備**
-    - `config.txt` を以下のように設定します。
-      ```ini
-      ACTIVE_ROBOTS=1
-      R1_MODE_NUM=2
-      ```
+    - `start.bat` を実行してランチャーを開き、以下のように設定します。
+
+    | 項目 | 設定値 |
+    |------|--------|
+    | **Active** | `1` |
+    | **R1 mode** | `table` |
+    | **Data save** | `OFF` |
+
+    設定を確認したら **START** をクリックします。
 
 2.  **テーブルデータの作成**
     - 前回の練習で作成されたログフォルダを開き、`metadata.csv`を表計算ソフトで開きます。
@@ -130,7 +134,7 @@
     - 編集が終わったら、ファイルをCSV形式で保存します。
 
 4.  **走行の確認**
-    - `main.py`を実行します。
+    - `start.bat` を実行します。
     - ロボットが、先ほどコピーしたログ通りに自動で走行を始めることを確認しましょう。自分のキーボード操作が再現される様子は、少し不思議な感覚かもしれません。
 
 > **考えてみよう: 完全に同じ動きになりましたか？**
@@ -199,3 +203,12 @@ ExcelやGoogleスプレッドシート、あるいはPython（`pandas` + `matplo
 - [03_Manual_Control.md](03_Manual_Control.md)
 - [05_Rule_Based_Control.md](05_Rule_Based_Control.md)
 - [用語集](99_Glossary.md)
+
+---
+
+> **❓ うまくいかない場合は？**
+> [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) にエラーメッセージをそのまま貼り付けて質問してください。
+
+---
+
+⬅️ [前のレッスン: 03_Manual_Control.md（マニュアル操作）](03_Manual_Control.md) ｜ ➡️ [次のレッスン: 05_Rule_Based_Control.md（ルールベース制御）](05_Rule_Based_Control.md)
