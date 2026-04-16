@@ -197,7 +197,7 @@ def main():
         print()
         print("For large models, please submit manually:")
         print("  1. Upload your files to Google Drive and get a shareable link.")
-        print("  2. Email the link to: aira.race.official@gmail.com")
+        print("  2. Email the link to: submit@aira-race.com")
         print(f"     Subject: [Submit] {comp_name} / {name}")
         input("\nPress Enter to close...")
         sys.exit(0)
