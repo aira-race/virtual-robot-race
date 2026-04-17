@@ -181,7 +181,7 @@ def show_launcher() -> bool:
     # ── Player ────────────────────────────────────────────────
     _section(root, "PLAYER")
     name_var = tk.StringVar(value=cfg.get("NAME", "Player0000"))
-    comp_var = tk.StringVar(value=cfg.get("COMPETITION_NAME", "RACE_XXXX"))
+    comp_var = tk.StringVar(value=cfg.get("COMPETITION_NAME", "Tutorial"))
     _row(root, "Name",        lambda p: _entry(p, name_var))
     _row(root, "Competition", lambda p: _entry(p, comp_var))
 

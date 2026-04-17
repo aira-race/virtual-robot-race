@@ -12,7 +12,7 @@ COMPETITION_NAME=Tutorial
 
 # ===== Robot Setup =====
 
-# Active robots (comma-separated)
+# Active robots (comma-separated):
 # Example: ACTIVE_ROBOTS=1      → Robot1 only
 # Example: ACTIVE_ROBOTS=1,2    → Robot1 and Robot2
 ACTIVE_ROBOTS=1,2
