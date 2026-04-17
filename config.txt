@@ -5,8 +5,7 @@
 # ===== Player =====
 
 # Player name: alphanumeric and underscore, up to 16 characters (A-Z, a-z, 0-9, _)
-NAME=AndyTest
-
+NAME=YourName
 # Competition name: must match a valid competition ID registered on the platform
 COMPETITION_NAME=Tutorial
 
@@ -38,7 +37,7 @@ DATA_SAVE=0
 # Race participation flag:
 # 1 = Submit result to leaderboard
 # 0 = Test run only (no submission)
-RACE_FLAG=1
+RACE_FLAG=0
 
 # Post to X (Twitter) on race completion:
 # 1 = Post result to X
