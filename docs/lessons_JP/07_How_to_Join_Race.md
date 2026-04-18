@@ -61,4 +61,4 @@
 
 ---
 
-⬅️ [前のレッスン: 06_AI_Mode.md（AIモード）](06_AI_Mode.md) ｜ ➡️ [用語集: 99_Glossary.md](99_Glossary.md)
+⬅️ [前のレッスン: 06_AI_Mode.md（AIモード）](06_AI_Mode.md) ｜ ➡️ [次のレッスン: 08_Sync_with_Upstream.md（Upstreamとの同期）](08_Sync_with_Upstream.md)

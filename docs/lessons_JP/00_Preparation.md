@@ -86,6 +86,8 @@ aira:autonomous intelligence racing arena
 > git clone https://github.com/あなたのユーザー名/virtual-robot-race.git
 > ```
 
+> **💡 将来のアップデートについて**: aira公式リポジトリが更新されたとき、その変更を自分のフォークに取り込む方法があります。これを「Upstream（アップストリーム）からの同期」と呼びます。今はまだ覚えなくて大丈夫ですが、詳しくは [レッスン08：Upstreamとの同期](08_Sync_with_Upstream.md) で解説します。
+
 ### Step 3: Python環境の構築
 次に、ロボットを制御するPythonプログラムの開発環境を構築します。
 
