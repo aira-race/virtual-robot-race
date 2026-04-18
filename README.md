@@ -2,6 +2,8 @@
 
 **Race your Algorithm. Challenge the World.**
 
+![aira — Virtual Robot Race](scripts/hero.gif)
+
 The official simulator for **[aira](https://aira-race.com)** — Autonomous Intelligence Racing Arena.
 Train your AI algorithm, race against others, and climb the global leaderboard.
 
@@ -41,7 +43,7 @@ Unity launches automatically and the race begins.
 ## Lessons
 
 Step-by-step curriculum — from environment setup to submitting your first competition result.
-Available in English and Japanese.
+No prior AI experience required. Available in English and Japanese.
 
 → **[docs/README.md](docs/README.md)**
 
