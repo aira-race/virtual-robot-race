@@ -43,6 +43,7 @@ Work through the lessons in order. Each one builds on the previous.
 | **05** | [Rule-Based Control](05_Rule_Based_Control.md) | Write a lane-following algorithm, race autonomously | ~60 min |
 | **06** | [AI Mode](06_AI_Mode.md) | Train a neural network by imitation learning, run inference | ~60 min |
 | **07** | [How to Join the Race](07_How_to_Join_Race.md) | Configure `config.txt`, submit your result to the leaderboard | ~15 min |
+| **08** | [Syncing with Upstream](08_Sync_with_Upstream.md) | Pull official updates into your fork without losing your work | ~15 min |
 | **99** | [Glossary](99_Glossary.md) | Key terms: SOC, RACE_FLAG, WebSocket, torque, etc. | Reference |
 
 **Total**: approximately 4–5 hours for the full curriculum (spread across multiple sessions is fine).

@@ -88,6 +88,8 @@ We'll use **GitHub Desktop** (a free app) to do both. No terminal commands neede
 > git clone https://github.com/YOUR_USERNAME/virtual-robot-race.git
 > ```
 
+> **💡 About future updates**: When the official aira repository is updated, there is a way to pull those changes into your own fork. This is called "syncing with Upstream." You don't need to worry about it now — it's covered in detail in [Lesson 08: Syncing with Upstream](08_Sync_with_Upstream.md).
+
 ### Step 2: Set Up the Python Environment
 
 Next, set up the Python development environment for controlling the robot.

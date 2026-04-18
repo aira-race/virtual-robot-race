@@ -61,4 +61,4 @@ Now, race with your algorithm!
 
 ---
 
-⬅️ [Previous lesson: 06_AI_Mode.md (AI Mode)](06_AI_Mode.md) ｜ ➡️ [Glossary: 99_Glossary.md](99_Glossary.md)
+⬅️ [Previous lesson: 06_AI_Mode.md (AI Mode)](06_AI_Mode.md) ｜ ➡️ [Next lesson: 08_Sync_with_Upstream.md (Syncing with Upstream)](08_Sync_with_Upstream.md)
