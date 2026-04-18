@@ -47,7 +47,26 @@ upstream  https://github.com/aira-race/virtual-robot-race.git (push)
 
 ---
 
-### Step 2: 公式の最新版を取得・マージする
+### Step 2: ローカルの変更を退避する
+
+`config.txt` など、自分が編集中のファイルがある場合、そのままでは merge がブロックされます。
+
+```
+error: Your local changes to the following files would be overwritten by merge:
+        config.txt
+```
+
+このエラーが出たら、まず変更を一時退避します。
+
+```bash
+git stash
+```
+
+> **💡 `git stash` とは**: 作業中の変更を一時的に棚上げするコマンドです。merge 後に `git stash pop` で元に戻せます。
+
+---
+
+### Step 3: 公式の最新版を取得・マージする
 
 aira公式リポジトリの更新を取り込みます。
 
@@ -61,9 +80,15 @@ git merge upstream/main
 
 > **💡 自分のコードは消えません**: `merge` は公式の変更と自分の変更を**統合**します。同じファイルの同じ行を両方が編集していた場合のみ「コンフリクト（競合）」が発生します（後述）。
 
+merge が完了したら、退避した変更を戻します。
+
+```bash
+git stash pop
+```
+
 ---
 
-### Step 3: 自分のoriginに反映する
+### Step 4: 自分のoriginに反映する
 
 マージが完了したら、自分のGitHub上のフォークにも反映します。
 
@@ -103,9 +128,11 @@ git push origin main
 | やること | コマンド | タイミング |
 |---------|---------|-----------|
 | upstreamを登録 | `git remote add upstream <URL>` | 初回のみ |
+| ローカル変更を退避 | `git stash` | merge前（変更がある場合） |
 | 公式の更新を取得 | `git fetch upstream` | 更新があるとき |
 | 自分のブランチに統合 | `git merge upstream/main` | 更新があるとき |
-| 自分のフォークに反映 | `git push origin main` | マージ完了後 |
+| 退避した変更を戻す | `git stash pop` | merge完了後 |
+| 自分のフォークに反映 | `git push origin main` | merge完了後 |
 
 aira のバージョンアップ情報は [GitHub Releases](https://github.com/aira-race/virtual-robot-race/releases) や [X (@RaceYourAlgo)](https://x.com/RaceYourAlgo) でお知らせします。
 
