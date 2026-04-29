@@ -56,7 +56,23 @@ aira:autonomous intelligence racing arena
 > ```bash
 > python --version
 > ```
-> `Python 3.12.x` のようにバージョン番号が表示されれば成功です。`'python' は認識されていません` と表示された場合はPATHが通っていません。一度アンインストールして、「Add Python to PATH」にチェックを入れ直してから再インストールしてください。
+> `Python 3.12.x` のようにバージョン番号が表示されれば成功です。
+>
+> `'python' は認識されていません` と表示された場合はPATHが通っていません。以下の手順で修正できます（アンインストール不要）：
+>
+> **方法①（推奨）: インストーラーを再実行する**
+> 1. ダウンロード済みの Python インストーラー（`.exe`）を再度実行する
+> 2. 「Modify」を選択し、次の画面で「Add Python to PATH」にチェックを入れて完了
+>
+> **方法②: 環境変数を手動で追加する**
+> 1. スタートメニューで「環境変数」と検索 →「システム環境変数の編集」を開く
+> 2. 「環境変数」ボタン → ユーザー環境変数の `Path` を選択 →「編集」
+> 3. 「新規」で以下の2行を追加（`[ユーザー名]` は自分のPCのユーザー名に置き換える）
+>    ```
+>    C:\Users\[ユーザー名]\AppData\Local\Programs\Python\Python312\
+>    C:\Users\[ユーザー名]\AppData\Local\Programs\Python\Python312\Scripts\
+>    ```
+> 4. OKで閉じてからターミナルを**新しく開き直して** `python --version` で確認する
 
 ---
 
