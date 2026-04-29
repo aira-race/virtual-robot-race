@@ -16,9 +16,10 @@ packaging==25.0
 opencv-python==4.11.0.86
 pillow==11.1.0
 
-# Deep Learning (CUDA 12.4)
-# Install with: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
-# For CPU-only: pip install torch torchvision
+# Deep Learning
+# CPU version is installed automatically by setup_env.bat — do NOT run pip install manually.
+# NVIDIA GPU users only: after setup_env.bat completes, follow the GPU upgrade steps
+#   in 00_Preparation.md (Section 3 "GPU Acceleration").
 torch==2.6.0
 torchvision==0.21.0
 

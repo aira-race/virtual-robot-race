@@ -93,17 +93,21 @@ class RobotWebSocketClient:
 
     async def send_json(self, data: dict):
         """Send JSON message to server"""
-        if self.websocket:
+        if self.websocket and self.running:
             try:
                 await self.websocket.send(json.dumps(data))
+            except websockets.exceptions.ConnectionClosed:
+                pass  # Socket closed during race end sequence; not an error
             except Exception as e:
                 print(f"[{self.robot_id}] Send error: {e}")
 
     async def send_binary(self, data: bytes):
         """Send binary data (e.g., image) to server"""
-        if self.websocket:
+        if self.websocket and self.running:
             try:
                 await self.websocket.send(data)
+            except websockets.exceptions.ConnectionClosed:
+                pass  # Socket closed during race end sequence; not an error
             except Exception as e:
                 print(f"[{self.robot_id}] Binary send error: {e}")
 
@@ -167,7 +171,13 @@ class RobotWebSocketClient:
                 soc_file.write_text(str(soc), encoding="utf-8")
 
             elif msg_type == "race_ended":
-                print(f"[{self.robot_id}] Race ended signal received from Unity. Stopping.")
+                reason = data.get("reason", "unknown")
+                reason_labels = {
+                    "timeout": "Time Up (90s limit)",
+                    "all_finished": "All robots finished",
+                }
+                reason_msg = reason_labels.get(reason, reason)
+                print(f"[{self.robot_id}] Race ended — {reason_msg}")
                 self.race_completed = True
                 self.running = False
                 if self.websocket:

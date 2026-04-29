@@ -88,7 +88,7 @@ aira:autonomous intelligence racing arena
 
 > **💡 将来のアップデートについて**: aira公式リポジトリが更新されたとき、その変更を自分のフォークに取り込む方法があります。これを「Upstream（アップストリーム）からの同期」と呼びます。今はまだ覚えなくて大丈夫ですが、詳しくは [レッスン08：Upstreamとの同期](08_Sync_with_Upstream.md) で解説します。
 
-### Step 3: Python環境の構築
+### Step 2: Python環境の構築
 次に、ロボットを制御するPythonプログラムの開発環境を構築します。
 
 1.  環境構築スクリプト `setup_env.bat` を実行します。
@@ -97,7 +97,7 @@ aira:autonomous intelligence racing arena
     ```
     > **💡 `.\` の意味**: PowerShellでは、`setup_env.bat` とだけ入力しても「コマンド」として認識されません。`.\` は「**現在のフォルダにあるファイル**」を指定する記法で、「このフォルダの `setup_env.bat` を実行する」という意味になります。
 
-    このスクリプトは、仮想環境の作成と、必要なPythonライブラリのインストールを自動で行います。スクリプトが正常に完了すると、仮想環境が有効化された**新しいコマンドプロンプト（黒いウィンドウ）が自動的に開きます**。プロンプトの行頭に `(.venv)` と表示されていれば成功です。
+    このスクリプトは、仮想環境の作成、必要なPythonライブラリのインストール、VS Code用の設定ファイル生成を自動で行います。スクリプトが正常に完了すると、仮想環境が有効化された**新しいコマンドプロンプト（黒いウィンドウ）が自動的に開きます**。プロンプトの行頭に `(.venv)` と表示されていれば成功です。
 
     > **💡 VS Code のターミナルで作業したい場合**: 自動で開く黒いウィンドウではなく、VS Code 内のターミナルで作業したい場合は、VS Code のターミナル（`Ctrl + Shift + @`）で以下のコマンドを実行してください。
     > ```bash
@@ -105,7 +105,7 @@ aira:autonomous intelligence racing arena
     > ```
     > プロンプトに `(.venv)` が表示されれば有効化完了です。以降の作業はこのターミナルで行います。
 
-### Step 4: VS Code の設定
+### Step 3: VS Code の設定
 最後に、`Visual Studio Code` の設定を行います。
 
 1.  **プロジェクトフォルダを開く**
@@ -119,11 +119,9 @@ aira:autonomous intelligence racing arena
 
     > **💡 ターミナルへの貼り付け**: VS Codeのターミナル上で **右クリック** するだけで貼り付けできます（`Ctrl+V` は不要です）。
 
-3.  **Pythonインタープリターの選択**
-    - `Ctrl + Shift + P` でコマンドパレットを開き、`Python: Select Interpreter` と入力します。
-    - プロジェクトの仮想環境である `./.venv/Scripts/python.exe` を選択します。
-    
-    これで、VS Codeがプロジェクト用のPython環境を正しく認識するようになります。
+3.  **Pythonインタープリターの確認（通常は不要）**
+    - `setup_env.bat` が自動でVS Code用の設定ファイルを生成するため、プロジェクトフォルダを開けば `.venv` が自動認識されます。
+    - もし認識されない場合は、`Ctrl + Shift + P` でコマンドパレットを開き、`Python: Select Interpreter` と入力して `./.venv/Scripts/python.exe` を手動で選択してください。
 
 ---
 

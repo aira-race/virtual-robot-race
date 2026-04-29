@@ -100,7 +100,7 @@ Next, set up the Python development environment for controlling the robot.
     ```
     > **💡 Why `.\`?**: In PowerShell, typing `setup_env.bat` alone is not recognized as a command. The `.\` prefix means "**the file in the current folder**" — it tells PowerShell to run `setup_env.bat` from the current directory.
 
-    This script automatically creates a virtual environment and installs the required Python libraries. When it completes, a message will guide you to the next steps. If you see `(.venv)` at the beginning of the prompt, it worked.
+    This script automatically creates a virtual environment, installs the required Python libraries, and generates a VS Code settings file. When it completes, a message will guide you to the next steps. If you see `(.venv)` at the beginning of the prompt, it worked.
 
     > **💡 Want to work in VS Code's terminal?** Run the following in VS Code's terminal (`Ctrl + Shift + @`):
     > ```bash
@@ -123,11 +123,9 @@ Finally, configure `Visual Studio Code`.
 
     > **💡 Pasting into the terminal**: In the VS Code terminal, simply **right-click** to paste — no need for `Ctrl+V`.
 
-3.  **Select the Python interpreter**
-    - Open the command palette with `Ctrl + Shift + P`, then type `Python: Select Interpreter`.
-    - Select the project virtual environment `./.venv/Scripts/python.exe`.
-
-    VS Code will now correctly recognize the project's Python environment.
+3.  **Verify the Python interpreter (usually not needed)**
+    - `setup_env.bat` automatically generates a VS Code settings file, so `.venv` should be recognized as soon as you open the project folder.
+    - If it is not recognized, open the command palette with `Ctrl + Shift + P`, type `Python: Select Interpreter`, and manually select `./.venv/Scripts/python.exe`.
 
 ---
 
