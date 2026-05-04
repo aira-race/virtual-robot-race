@@ -15,7 +15,7 @@ COMPETITION_NAME=Tutorial
 # Active robots (comma-separated):
 # Example: ACTIVE_ROBOTS=1      → Robot1 only
 # Example: ACTIVE_ROBOTS=1,2    → Robot1 and Robot2
-ACTIVE_ROBOTS=1,2
+ACTIVE_ROBOTS=1
 
 # Control mode per robot:
 # 1 = keyboard
