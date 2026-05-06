@@ -1,4 +1,4 @@
-﻿# 7. How to Join the Race
+# 7. How to Join the Race
 
 You have developed your algorithm and AI model through the training sessions — now it's time to race.
 There are two race formats: "Time Attack" and "Head-to-Head."
@@ -66,7 +66,7 @@ Now, race with your algorithm!
 ---
 
 > **❓ Having trouble?**
-> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) and ask for help.
 
 ---
 

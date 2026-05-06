@@ -1,4 +1,4 @@
-﻿# 6. AI Mode: Imitation Learning and Neural Networks
+# 6. AI Mode: Imitation Learning and Neural Networks
 
 In this lesson, **you will train an AI to drive and let it run autonomously.**
 It may sound difficult, but the essence of what you are doing is simple.
@@ -56,7 +56,7 @@ Look at `Robot1/inference_input.py`. Ask your AI assistant:
 What does inference_input.py do?
 ```
 
-> **💡 No AI assistant? Use NotebookLM instead**: [Ask NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713)
+> **💡 No AI assistant? Use NotebookLM instead**: [Ask NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e)
 > Paste the prompt above directly — it will explain the code based on the actual source files.
 
 > **⚠️ Do not modify this file.** To customize AI behavior, edit `ai_control_strategy.py` instead (see Section 2.3).
@@ -865,7 +865,7 @@ Files available: train.py / run_scorer.py / rl_reward.py / ai_control_strategy.p
 ---
 
 > **❓ Having trouble?**
-> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) and ask for help.
 
 ---
 

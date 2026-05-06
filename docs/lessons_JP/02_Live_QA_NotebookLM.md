@@ -1,4 +1,4 @@
-﻿# 2. NotebookLMを活用したライブQ&A
+# 2. NotebookLMを活用したライブQ&A
 
 ## はじめに
 開発を進める中で、エラーに直面したり、コードの構造が分からなくなったりすることがあるでしょう。
@@ -14,7 +14,7 @@
 ## 2.1 ライブ QA へのアクセス方法
 以下のリンクから、本レッスン専用のチャットウィンドウを開くことができます。
 
-[NotebookLMで質問する](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713)
+[NotebookLMで質問する](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e)
 
 ログイン: ご自身の Google アカウントでログインしてください。
 

@@ -1,4 +1,4 @@
-﻿# 5. Rule-Based Control and AI Orchestration
+# 5. Rule-Based Control and AI Orchestration
 
 In this lesson, you will tackle rule-based control — which may sound difficult.
 However, you do not need to write Python programs from scratch. **The essence of this lesson is to use AI assistants (such as Gemini Code Assist, Claude Code, or Codex) to the fullest to complete the tasks.**
@@ -338,7 +338,7 @@ Isolate the problem in steps:
 > **❓ "Can I add EMA or a Kalman filter to handle temporary lane loss?"**
 > The sample **already has a basic mechanism for this**. `rule_based_input.py` uses a `_lost_age` counter and `HOLD_FRAMES` (2 seconds' worth). When the lane is lost, the robot enters `hold` mode (maintaining the last command), then switches to `search` mode after 2 seconds. EMA can extend this by interpolating the detected lane position using a weighted average of recent frames. A Kalman filter is a more advanced approach that separates observation noise from prediction noise, smoothing out jittery detections.
 
-> **💡 Prefer not to use an AI coding assistant?** [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) is also useful. Ask questions like "What does this file do?" or "Where does `lateral_px` come from?" and it will answer based on the actual source code.
+> **💡 Prefer not to use an AI coding assistant?** [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) is also useful. Ask questions like "What does this file do?" or "Where does `lateral_px` come from?" and it will answer based on the actual source code.
 
 ---
 
@@ -448,7 +448,7 @@ Ask your AI assistant: "Write a scoring script that reads metadata.csv, calculat
 ---
 
 > **❓ Having trouble?**
-> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) and ask for help.
 
 ---
 

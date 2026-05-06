@@ -1,4 +1,4 @@
-﻿# 4. Log Data Review and Table Mode
+# 4. Log Data Review and Table Mode
 
 In this lesson, you will review the driving log (Log) saved during the previous manual control session, and learn about "Table Mode" — a mode that replays a run using that log data.
 
@@ -259,7 +259,7 @@ Plot a line chart with `race_time_ms` on the horizontal axis and three lines: `p
 ---
 
 > **❓ Having trouble?**
-> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) and ask for help.
 
 ---
 

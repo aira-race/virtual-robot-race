@@ -1,4 +1,4 @@
-﻿# 2. Live Q&A with NotebookLM
+# 2. Live Q&A with NotebookLM
 
 ## Introduction
 As you develop in aira, you will encounter errors and moments when you lose track of your code's structure.
@@ -14,7 +14,7 @@ This tool acts as an "AI mentor" that fully understands aira's specifications an
 ## 2.1 How to Access the Live Q&A
 Use the link below to open the dedicated chat window for this training.
 
-[Ask a question on NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713)
+[Ask a question on NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e)
 
 Login: Sign in with your own Google account.
 

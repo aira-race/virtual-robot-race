@@ -1,4 +1,4 @@
-﻿# 5. ルールベース制御とAIオーケストレーション
+# 5. ルールベース制御とAIオーケストレーション
 
 **学習目標:**
 - このシステムが「何を」制御しているかを理解する（入力・出力・タイミング）
@@ -247,7 +247,7 @@ AIコーディングアシスタントを使わず、コードを自分のペー
 
 このプロジェクトのNotebookLMには、`rule_based_algorithms/` のPythonスクリプトや仕様ドキュメントがソースとして学習されています。「このファイルは何をしているの？」「`lateral_px` ってどこから来る値？」といった質問をテキストや音声で投げかけると、実際のコードをもとに答えてくれます。
 
-> **💡 使い方**: [NotebookLM を開く](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) → 質問を入力するだけです。エラーメッセージをそのまま貼り付けても構いません。
+> **💡 使い方**: [NotebookLM を開く](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) → 質問を入力するだけです。エラーメッセージをそのまま貼り付けても構いません。
 
 ---
 
@@ -425,7 +425,7 @@ AIアシスタント（Gemini Code Assist、Claude Code、Codexなど）に「me
 ---
 
 > **❓ うまくいかない場合は？**
-> [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) にエラーメッセージをそのまま貼り付けて質問してください。
+> [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) にエラーメッセージをそのまま貼り付けて質問してください。
 
 ---
 

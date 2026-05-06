@@ -176,7 +176,7 @@ aira のバージョンアップ情報は [GitHub Releases](https://github.com/a
 ---
 
 > **❓ うまくいかない場合は？**
-> [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) にエラーメッセージをそのまま貼り付けて質問してください。
+> [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) にエラーメッセージをそのまま貼り付けて質問してください。
 
 ---
 

@@ -1,4 +1,4 @@
-﻿# 3. Manual Control
+# 3. Manual Control
 
 In this lesson, you will drive the robot manually with your keyboard and try to complete the course.
 Driving yourself will give you the intuition for "what it means to go fast" and "why mistakes happen" — a solid foundation for designing algorithms in later lessons.
@@ -118,7 +118,7 @@ Go for the fastest 2-lap total time. Beat your personal best!
 ---
 
 > **❓ Having trouble?**
-> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/ab916e69-f78b-47c3-9982-a5210a07d713) and ask for help.
+> Paste your error message directly into [NotebookLM](https://notebooklm.google.com/notebook/e16cd6bf-f642-459f-91fd-1146aa75398e) and ask for help.
 
 ---
 
